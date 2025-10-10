@@ -1,6 +1,6 @@
 {
   "rewrites": [
     { "source": "/api/kobo/(.*)", "destination": "/api/kobo/$1" },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
