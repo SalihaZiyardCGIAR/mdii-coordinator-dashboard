@@ -1,40 +1,65 @@
 // api/kobo/[...path].js
 export default async function handler(req, res) {
-  const { path = [] } = req.query;
-  const koboUrl = `https://kf.kobotoolbox.org/api/v2/${path.join('/')}${req.url.includes('?') ? '?' + req.url.split('?')[1] : ''}`;
-
-  console.log('Proxying to KoBo:', req.method, koboUrl); // Log for debugging
-
   try {
-    const response = await fetch(koboUrl, {
+    // Reconstruct the full path and query string
+    const { path: pathSegments = [] } = req.query;
+    const pathStr = Array.isArray(pathSegments) ? pathSegments.join('/') : pathSegments;
+    const queryString = req.url.split('?')[1] || ''; // Preserve query params (e.g., ?format=json)
+    const koboUrl = `https://kf.kobotoolbox.org/api/v2/${pathStr}${queryString ? `?${queryString}` : ''}`;
+
+    console.log('Proxying to KoBo:', req.method, koboUrl);
+    console.log('Headers:', Object.fromEntries(Object.entries(req.headers).filter(([k]) => !k.startsWith('x-vercel-') && k !== 'host')));
+
+    const fetchOptions = {
       method: req.method,
       headers: {
-        Authorization: 'Token fc37a9329918014ef595b183adcef745a4beb217',
-        Accept: 'application/json',
-        // Pass through relevant headers
+        'Authorization': `Token ${process.env.VITE_KOBO_API_TOKEN || 'fc37a9329918014ef595b183adcef745a4beb217'}`,
+        'Accept': 'application/json',
         'Content-Type': req.headers['content-type'] || 'application/json',
       },
-      body: req.method !== 'GET' && req.body ? req.body : undefined,
-    });
+    };
+
+    // Handle body for non-GET requests
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      fetchOptions.body = req.body;
+    }
+
+    const response = await fetch(koboUrl, fetchOptions);
+
+    console.log('KoBo response status:', response.status, response.statusText);
 
     if (!response.ok) {
-      console.error('KoBo API error:', response.status, response.statusText);
+      const errorText = await response.text();
+      console.error('KoBo API error body:', errorText);
       return res.status(response.status).json({
         error: `KoBo API error: ${response.statusText}`,
         status: response.status,
+        details: errorText,
       });
     }
 
-    const data = await response.json();
-    res.status(response.status).json(data);
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } else {
+      // Handle non-JSON (e.g., XML or text)
+      const text = await response.text();
+      res.status(response.status).setHeader('Content-Type', contentType || 'text/plain').send(text);
+    }
   } catch (error) {
-    console.error('Proxy error:', error.message);
-    res.status(500).json({ error: 'Failed to proxy request to KoBo Toolbox', details: error.message });
+    console.error('Proxy error:', error.message, error.stack);
+    res.status(500).json({ 
+      error: 'Failed to proxy request to KoBo Toolbox', 
+      details: error.message 
+    });
   }
 }
 
 export const config = {
   api: {
-    bodyParser: true, // Ensure body parsing for POST requests
+    bodyParser: {
+      sizeLimit: '10mb', // Increase if needed for large responses
+    },
   },
 };
