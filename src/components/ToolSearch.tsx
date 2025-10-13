@@ -184,22 +184,22 @@ const handleConfirmStop = async () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Tool Management</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Tool Management</h1>
         <p className="text-muted-foreground">Search and manage research tools and control submissions</p>
       </div>
 
       {/* Search Bar */}
-      <Card className="shadow-[var(--shadow-card)]">
+      <Card className="shadow-[var(--shadow-card)] p-0">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="w-5 h-5" />
+          <CardTitle className="flex items-center gap-2 text-xl p-0">
+            <Search className="w-4 h-4" />
             Search Tools
           </CardTitle>
           <CardDescription>Find specific tools by name, coordinator, or tool ID</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 p-0" />
             <Input
               type="text"
               placeholder="Search by tool name, coordinator, or tool ID..."
