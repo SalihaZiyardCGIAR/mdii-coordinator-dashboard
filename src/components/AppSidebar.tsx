@@ -25,12 +25,12 @@ const menuItems = [
     icon: BarChart3,
     description: "Tools summary and statistics"
   },
-  {
-    id: "tools",
-    title: "Tool Management",
-    icon: Search,
-    description: "Search and manage tools"
-  },
+  // {
+  //   id: "tools",
+  //   title: "Tool Management",
+  //   icon: Search,
+  //   description: "Search and manage tools"
+  // },
   {
     id: "tool-details",
     title: "Tool Details",

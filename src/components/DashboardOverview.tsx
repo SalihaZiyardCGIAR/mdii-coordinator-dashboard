@@ -5,6 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Clock, AlertCircle, Users, Target } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { Loader } from "./Loader";
+import { ToolDetails } from "./ToolDetails";
+import { ToolSearch } from "./ToolSearch";
 
 interface DashboardOverviewProps {
   coordinatorEmail: string;
@@ -149,38 +151,7 @@ export const DashboardOverview = ({ coordinatorEmail }: DashboardOverviewProps) 
 
       {/* Recent Activity */}
       {!loading && !error && (
-        <Card className="shadow-[var(--shadow-card)]">
-          <CardHeader>
-            <CardTitle>Latest Tools submitted</CardTitle>
-            <CardDescription>Latest tools appointed to {coordinatorEmail || "you"}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivity.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No recent activity found</p>
-              ) : (
-                recentActivity.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-center justify-between p-4 border border-border rounded-lg bg-gradient-to-r from-card to-muted/20"
-                  >
-                    <div className="flex items-center gap-4">
-                      {getStatusIcon(activity.status)}
-                      <div>
-                        <p className="font-medium text-foreground">{activity.tool}</p>
-                        <p className="text-sm text-muted-foreground">Coordinator: {activity.coordinator}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {getStatusBadge(activity.status)}
-                      <span className="text-sm text-muted-foreground">{activity.date}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <ToolSearch />
       )}
 
       {/* Debug Section */}

@@ -16,8 +16,8 @@ const DashboardContent = () => {
     switch (currentView) {
       case "overview":
         return <DashboardOverview coordinatorEmail={coordinatorEmail} />;
-      case "tools":
-        return <ToolSearch />;
+      // case "tools":
+      //   return <ToolSearch />;
       case "tool-details":
         return <ToolDetails />;
       case "feedback":
