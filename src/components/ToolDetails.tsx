@@ -306,8 +306,8 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
 
   return (
     <div className="min-h-screen">
-      <div className=" mx-auto ">
-        <div className="mb-8">
+      <div className="max-w-[1550px] mx-auto">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground"> 
              {/* className="text-2xl font-semibold text-gray-900 mb-2" */}
             {/* <span style={{ color: "#591fd5" }}>MDII</span>{" "} */}
