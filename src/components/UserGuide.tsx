@@ -240,17 +240,13 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           What is MDII?
                         </div>
-                        {activeSection === "what-is-mdii" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
+
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-6 animate-accordion-down">
+                    <CardContent className="space-y-6 ">
                       <p className="text-muted-foreground leading-relaxed">
                         The Multidimensional Digital Inclusiveness Index (MDII)
                         is a scientific framework designed to assess and improve
@@ -419,17 +415,12 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           Evaluation Framework
                         </div>
-                        {activeSection === "evaluation-framework" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-6 animate-accordion-down">
+                    <CardContent className="space-y-6 ">
                       <div className="space-y-4">
                         <h4 className="font-semibold text-foreground">
                           Methodology
@@ -561,17 +552,12 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           MDII Components
                         </div>
-                        {activeSection === "how-mdii-works" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-6 animate-accordion-down">
+                    <CardContent className="space-y-6 ">
                       <p className="text-muted-foreground leading-relaxed">
                         The MDII has several important elements that you should
                         be familiar with. Below is a high-level overview of the
@@ -961,17 +947,12 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           MDII Ecosystem
                         </div>
-                        {activeSection === "mdii-ecosystem" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-6 animate-accordion-down">
+                    <CardContent className="space-y-6 ">
                       <p className="text-muted-foreground leading-relaxed">
                         MDII is more than this desktop app. It's a{" "}
                         <strong>modular ecosystem</strong> of tools tailored to
@@ -1173,17 +1154,12 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           Internet Needs
                         </div>
-                        {activeSection === "internet-usage" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-4 animate-accordion-down">
+                    <CardContent className="space-y-4 ">
                       <div className="p-4 rounded-lg border border-border bg-card">
                         <h4 className="font-semibold text-sm mb-3 text-foreground">
                           Connection Required For:
@@ -1244,17 +1220,12 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           User Types
                         </div>
-                        {activeSection === "user-types" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-4 animate-accordion-down">
+                    <CardContent className="space-y-4 ">
                       <p className="text-muted-foreground leading-relaxed">
                         Different types of users contribute to an MDII
                         evaluation:
@@ -1423,17 +1394,12 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           Expert Management
                         </div>
-                        {activeSection === "expert-management" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-6 animate-accordion-down">
+                    <CardContent className="space-y-6 ">
                       <p className="text-muted-foreground leading-relaxed">
                         Managing domain experts and their contributions to the
                         MDII evaluation.
@@ -1626,17 +1592,12 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           Evaluation Workflow
                         </div>
-                        {activeSection === "evaluation-process" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-6 animate-accordion-down">
+                    <CardContent className="space-y-6 ">
                       <p className="text-muted-foreground leading-relaxed">
                         This section outlines the full journey of evaluating a
                         digital tool's inclusiveness using the MDII desktop
@@ -2180,17 +2141,12 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           Expected Outputs
                         </div>
-                        {activeSection === "outputs" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-6 animate-accordion-down">
+                    <CardContent className="space-y-6 ">
                       {/* Onboarding Context */}
                       <div className="p-4 rounded-lg bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
                         <p className="text-muted-foreground leading-relaxed">
@@ -2633,17 +2589,12 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           Troubleshooting
                         </div>
-                        {activeSection === "troubleshooting" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-6 animate-accordion-down">
+                    <CardContent className="space-y-6 ">
                       {/* Onboarding Context */}
                       <div className="p-4 rounded-lg bg-gradient-to-r from-red-500/5 to-orange-500/5 border border-red-500/20">
                         <p className="text-muted-foreground leading-relaxed">
@@ -3017,17 +2968,12 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           Additional Support
                         </div>
-                        {activeSection === "additional-support" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-6 animate-accordion-down">
+                    <CardContent className="space-y-6 ">
                       <div className="grid md:grid-cols-2 gap-6">
                         {/* Technical Support */}
                         <div className="p-4 rounded-lg border border-border bg-card">
@@ -3099,17 +3045,12 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           Further Reading
                         </div>
-                        {activeSection === "further-reading" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-6 animate-accordion-down">
+                    <CardContent className="space-y-6 ">
                       <div className="p-6 rounded-lg bg-yellow-50 border border-yellow-200">
                         <h3 className="text-xl font-semibold text-foreground mb-4">
                           Discover more about MDII
@@ -3204,17 +3145,12 @@ const toggleSection = (sectionId: string) => {
                           </div>
                           Acknowledgments & Development Team
                         </div>
-                        {activeSection === "acknowledgments" ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <CardContent className="space-y-6 animate-accordion-down">
+                    <CardContent className="space-y-6 ">
                       <div className="space-y-6">
                         <div>
                           <h4 className="text-lg font-semibold text-foreground mb-4">
