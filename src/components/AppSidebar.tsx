@@ -1,4 +1,4 @@
-import { BarChart3, Search, LogOut, MessageSquare } from "lucide-react";
+import { BarChart3, Search, LogOut, MessageSquare, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -23,25 +23,26 @@ const menuItems = [
     id: "overview",
     title: "Dashboard Overview",
     icon: BarChart3,
-    description: "Tools summary and statistics"
   },
   // {
   //   id: "tools",
   //   title: "Tool Management",
   //   icon: Search,
-  //   description: "Search and manage tools"
   // },
   {
     id: "tool-details",
     title: "Tool Details",
     icon: Search,
-    description: "View specific tool submissions"
   },
   {
     id: "feedback",
     title: "Feedback & Support",
     icon: MessageSquare,
-    description: "Share feedback with the team"
+  },
+    {
+    id: "user-guide",
+    title: "User Guide",
+    icon: BookOpen,
   }
 ];
 
@@ -81,8 +82,7 @@ export function AppSidebar({ currentView, onViewChange }: AppSidebarProps) {
                   >
                     <item.icon className="w-4 h-4 " />
                     <div className="flex flex-col items-start">
-                      <span className="font-medium mt-5">{item.title}</span>
-                      <span className="text-xs text-muted-foreground">{item.description}</span>
+                      <span className="font-medium">{item.title}</span>
                     </div>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
