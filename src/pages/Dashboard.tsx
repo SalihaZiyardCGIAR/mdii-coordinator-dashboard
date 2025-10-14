@@ -10,6 +10,7 @@ import { CoordinatorFeedback } from "@/components/CoordinatorFeedback ";
 
 const DashboardContent = () => {
   const [currentView, setCurrentView] = useState("overview");
+  const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
   const { coordinatorEmail, loading, error } = useData();
 
   const renderContent = () => {
@@ -19,12 +20,18 @@ const DashboardContent = () => {
       // case "tools":
       //   return <ToolSearch />;
       case "tool-details":
-        return <ToolDetails />;
+        return <ToolDetails toolId={selectedToolId} />;
       case "feedback":
         return <CoordinatorFeedback />;
       default:
         return <DashboardOverview coordinatorEmail={coordinatorEmail} />;
     }
+  };
+
+  // Handler for when a tool is selected from ToolSearch
+  const handleToolSelect = (toolId: string) => {
+    setSelectedToolId(toolId);
+    setCurrentView("tool-details");
   };
 
   if (loading)
@@ -44,7 +51,17 @@ const DashboardContent = () => {
   return (
     <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-forest-light/30 to-earth-blue-light/30">
       <AppSidebar currentView={currentView} onViewChange={setCurrentView} />
-      <main className="flex-1 p-6">{renderContent()}</main>
+      <main className="flex-1 p-6">
+        {/* Pass the tool selection handler to ToolSearch */}
+        {currentView === "overview" ? (
+          <DashboardOverview 
+            coordinatorEmail={coordinatorEmail} 
+            onToolSelect={handleToolSelect}
+          />
+        ) : (
+          renderContent()
+        )}
+      </main>
     </div>
   );
 };

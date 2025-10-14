@@ -5,14 +5,14 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Clock, AlertCircle, Users, Target } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { Loader } from "./Loader";
-import { ToolDetails } from "./ToolDetails";
 import { ToolSearch } from "./ToolSearch";
 
 interface DashboardOverviewProps {
   coordinatorEmail: string;
+  onToolSelect?: (toolId: string) => void;
 }
 
-export const DashboardOverview = ({ coordinatorEmail }: DashboardOverviewProps) => {
+export const DashboardOverview = ({ coordinatorEmail, onToolSelect }: DashboardOverviewProps) => {
   const { stats, recentActivity, loading, error, fetchData } = useData();
   const [debugData, setDebugData] = useState<any>(null);
 
@@ -149,9 +149,9 @@ export const DashboardOverview = ({ coordinatorEmail }: DashboardOverviewProps) 
         </div>
       )}
 
-      {/* Recent Activity */}
+      {/* Tool Search Component */}
       {!loading && !error && (
-        <ToolSearch />
+        <ToolSearch onToolSelect={onToolSelect} />
       )}
 
       {/* Debug Section */}
