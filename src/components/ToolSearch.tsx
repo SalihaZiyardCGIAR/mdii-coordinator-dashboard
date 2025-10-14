@@ -403,8 +403,8 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
       {!loading && !error && (
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="active">Active Collection ({activeTools.length})</TabsTrigger>
-            <TabsTrigger value="stopped">Collection Stopped ({stoppedTools.length})</TabsTrigger>
+            <TabsTrigger value="active">Running Evaluation ({activeTools.length})</TabsTrigger>
+            <TabsTrigger value="stopped">Closed Evaluation ({stoppedTools.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="active" className="space-y-4 mt-6">
