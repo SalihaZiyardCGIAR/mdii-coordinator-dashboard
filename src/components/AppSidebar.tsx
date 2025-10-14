@@ -61,8 +61,8 @@ export function AppSidebar({ currentView, onViewChange }: AppSidebarProps) {
             <BarChart3 className="w-4 h-4 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">MDII Portal</h2>
-            <p className="text-xs text-muted-foreground">CGIAR Tools</p>
+            <h2 className="font-semibold text-foreground">Coordinator Portal</h2>
+            <p className="text-xs text-muted-foreground">MDII Tools</p>
           </div>
         </div>
       </SidebarHeader>
