@@ -163,36 +163,45 @@ const toggleSection = (sectionId: string) => {
 
           <div className="flex gap-8">
             {/* Table of Contents Sidebar */}
-            <div className="w-64 flex-shrink-0 h-fit">
-                <Card className="glassmorphism sticky top-20">
-                <CardHeader>
-                  <CardTitle className="text-sm">Table of Contents</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <nav className="space-y-2">
-                    {sections.map((section) => (
-                      <a
-                        key={section.id}
-                        href={`#${section.id}`}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            toggleSection(section.id);
-                        }}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-yellow-50 transition-colors group outline-none focus:outline-none"
-                        >
-                        <div className={`p-1.5 rounded-md ${section.color}`}>
-                          {section.icon}
-                        </div>
-                        <span className="text-sm font-medium text-foreground group-hover:text-primary">
-                          {section.title}
-                        </span>
-                      </a>
-                    ))}
-                  </nav>
-                </CardContent>
-              </Card>
-            </div>
-
+        <div className="w-64 flex-shrink-0 h-fit">
+        <Card className="glassmorphism sticky top-20">
+            <CardHeader>
+            <CardTitle className="text-sm">Table of Contents</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <nav className="space-y-2">
+                {sections.map((section) => (
+                <a
+                    key={section.id}
+                    href={`#${section.id}`}
+                    onClick={(e) => {
+                    e.preventDefault();
+                    toggleSection(section.id);
+                    }}
+                    className={`flex items-center gap-3 p-2 rounded-lg transition-colors group outline-none focus:outline-none ${
+                    activeSection === section.id
+                        ? "bg-yellow-100"
+                        : "hover:bg-yellow-50"
+                    }`}
+                >
+                    <div className={`p-1.5 rounded-md ${section.color}`}>
+                    {section.icon}
+                    </div>
+                    <span
+                    className={`text-sm font-medium ${
+                        activeSection === section.id
+                        ? "text-primary font-semibold"
+                        : "text-foreground group-hover:text-primary"
+                    }`}
+                    >
+                    {section.title}
+                    </span>
+                </a>
+                ))}
+            </nav>
+            </CardContent>
+        </Card>
+        </div>
             {/* Main Content */}
             <div className="flex-1">
               {/* Guidance Card - Prompt to use TOC */}
@@ -3013,7 +3022,7 @@ const toggleSection = (sectionId: string) => {
                       </div>
 
                       <div className="mt-6 p-4 rounded-lg bg-primary/5 border border-primary/20">
-                        <p className="text-sm text-muted-foreground text-center">
+                        <p className="text-sm text-muted-foreground">
                           <strong>Response Time:</strong> We typically respond
                           to support requests within 1-2 business days. For
                           urgent technical issues, please indicate "URGENT" in
