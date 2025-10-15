@@ -151,10 +151,10 @@ const toggleSection = (sectionId: string) => {
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <div>
-                  <h1 className="text-3xl font-semibold text-foreground">
-                    Discover what makes MDII unique
+                  <h1 className="text-3xl font-bold text-foreground">
+                    User Guide 
                   </h1>
-                  <p className="text-gray-600">User Guide for MDII Coordinator Panel</p>
+                  <p className="text-gray-600">Discover what makes MDII unique</p>
 
                 </div>
               </div>
