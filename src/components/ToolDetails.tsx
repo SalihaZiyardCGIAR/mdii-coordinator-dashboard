@@ -655,7 +655,6 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
                 <div className="bg-white border rounded-lg">
                   <div className="px-6 py-4 border-b">
                     <h3 className="text-lg font-medium">Direct Users</h3>
-                    <p className="text-sm text-gray-600">{(toolData as any).directUsers.data.length} responses</p>
                   </div>
                   <div className="p-6">
                     <DataTable 
@@ -670,7 +669,6 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
                 <div className="bg-white border rounded-lg">
                   <div className="px-6 py-4 border-b">
                     <h3 className="text-lg font-medium">Indirect Users</h3>
-                    <p className="text-sm text-gray-600">{(toolData as any).indirectUsers.data.length} responses</p>
                   </div>
                   <div className="p-6">
                     <DataTable 

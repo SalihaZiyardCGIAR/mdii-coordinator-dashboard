@@ -495,7 +495,7 @@ export default function DataTable({ data, questions }) {
             </div>
 
             <div className="px-4 py-2 rounded text-sm bg-blue-100 text-blue-800">
-              {filteredAndSortedData.length} records
+               {filteredAndSortedData.length} {filteredAndSortedData.length === 1 ? 'record' : 'records'}
             </div>
           </div>
         </div>
