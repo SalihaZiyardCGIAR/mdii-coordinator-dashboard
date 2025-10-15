@@ -1,14 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, StopCircle, Loader2, CheckCircle, XCircle, FileText } from "lucide-react";
+import { Search, Loader2, CheckCircle, XCircle, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
 import { useData } from "@/context/DataContext";
 import { getApiUrl } from "@/config/apiConfig";
 import { KOBO_CONFIG } from "@/config/koboConfig";
@@ -32,15 +30,12 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState("active");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedTool, setSelectedTool] = useState<{ id: string; name: string; maturityLevel: string | null } | null>(null);
   const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
   const [toolDetails, setToolDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   
-  const { tools, setTools, loading, error } = useData();
-  const { toast } = useToast();
+  const { tools, loading, error } = useData();
   const toolsPerPage = 10;
 
   // Filter tools by status first, then by search query
@@ -234,98 +229,6 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
     onToolSelect?.(toolId);
   };
 
-  const handleStopTool = (toolId: string, toolName: string, maturityLevel: string | null) => {
-    setSelectedTool({ id: toolId, name: toolName, maturityLevel });
-    setIsDialogOpen(true);
-  };
-
-  const handleConfirmStop = async () => {
-    if (!selectedTool) return;
-
-    const currentDateTime = new Date();
-    const formattedDateTime = currentDateTime.toLocaleString();
-    const isoDateTime = currentDateTime.toISOString();
-
-    try {
-      const calculationMethod = selectedTool.maturityLevel === "advanced" ? "MDII Regular Version" : "MDII Exante Version";
-      const csvApiUrl = `${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/score_kobo_tool?code=${import.meta.env.VITE_AZURE_FUNCTION_KEY}&tool_id=${selectedTool.id}&calculation_method=${encodeURIComponent(calculationMethod)}&column_names=column_names`;
-      const img = new Image();
-      img.src = csvApiUrl;
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const apiUrl = `/api/score-tool?tool_id=${selectedTool.id}`;
-      const response = await fetch(apiUrl);
-
-      if (!response.ok) throw new Error(`Failed to trigger tool stop: ${response.statusText}`);
-
-      setTools((prev: Tool[]) =>
-        prev.map((tool) => (tool.id === selectedTool.id ? { ...tool, status: "stopped" } : tool))
-      );
-
-      toast({
-        title: "Tool Stopped",
-        description: `${selectedTool.name} submissions stopped at ${formattedDateTime}. Email will be sent shortly.`,
-      });
-
-      setActiveTab("stopped");
-      setCurrentPage(1);
-
-    setTimeout(async () => {
-      try {
-        const flowUrl = "https://default6afa0e00fa1440b78a2e22a7f8c357.d5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/080a15cb2b9b4387ac23f1a7978a8bbb/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XlWqhTpqNuxZJkvKeCoWziBX5Vhgtix8zdUq0IF8Npw";
-        
-        const pdfReportLink = `https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${selectedTool.id}`;
-        
-        const payload = {
-          tool_id: selectedTool.id,
-          tool_name: selectedTool.name,
-          tool_maturity: selectedTool.maturityLevel || "unknown",
-          stopped_at: formattedDateTime,
-          stopped_at_iso: isoDateTime,
-          timestamp: currentDateTime.getTime(),
-            pdf_report_link: pdfReportLink
-        };
-
-        const flowResponse = await fetch(flowUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!flowResponse.ok) {
-          throw new Error(`Failed to trigger email flow: ${flowResponse.statusText}`);
-        }
-
-        toast({
-          title: "Email Triggered",
-          description: `Email for tool ${selectedTool.id} has been sent with Score report link attached.`,
-        });
-      } catch (flowErr: any) {
-        console.error("Error triggering Power Automate:", flowErr);
-        toast({
-          title: "Error",
-          description: `Failed to trigger email: ${flowErr.message}`,
-          variant: "destructive",
-        });
-      }
-    }, 6000);
-
-      setIsDialogOpen(false);
-    } catch (err: any) {
-      console.error("Error stopping tool:", err);
-      toast({
-        title: "Error",
-        description: err.message.includes("Failed to fetch") || err.message.includes("CORS")
-          ? "Unable to connect to the server. Please try again later or contact support."
-          : `Failed to stop tool: ${err.message}`,
-        variant: "destructive",
-      });
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     return status === "active" ? (
       <Badge className="bg-success/20 text-success border-success/30">Active</Badge>
@@ -356,7 +259,7 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Tool Management</h1>
-        <p className="text-muted-foreground">Search and manage research tools and control submissions</p>
+        <p className="text-muted-foreground">Search and manage research tools</p>
       </div>
 
       {/* Search Bar */}
@@ -424,20 +327,6 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
                           <div className="flex items-center gap-3">
                             <CardTitle className="text-lg">{tool.name} - {tool.id}</CardTitle>
                             {getStatusBadge(tool.status)}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleStopTool(tool.id, tool.name, tool.maturityLevel);
-                              }}
-                              className="gap-2"
-                            >
-                              <StopCircle className="w-4 h-4" />
-                              Stop
-                            </Button>
                           </div>
                         </div>
                       </CardHeader>
@@ -644,24 +533,6 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
           )}
         </div>
       )}
-
-      {/* Confirmation Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Stop</DialogTitle>
-            <DialogDescription>Are you sure you want to stop submissions for {selectedTool?.name}?</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleConfirmStop}>
-              Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

@@ -1,14 +1,16 @@
-// ToolDetails.tsx - Updated component
+// ToolDetails.tsx
 import { useState, useEffect } from "react";
-import { Search, FileText, Calendar, User, MapPin, Loader2, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Search, FileText, Calendar, User, MapPin, Loader2, CheckCircle, XCircle, AlertCircle, StopCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useData } from "@/context/DataContext";
 import { getApiUrl } from "@/config/apiConfig";
 import { KOBO_CONFIG } from "@/config/koboConfig";
 import { Loader } from "@/components/Loader";
+import { useToast } from "@/hooks/use-toast";
 import DataTable from "./DataTable";
 
 interface ToolDetailsProps {
@@ -38,11 +40,14 @@ interface Submission {
 }
 
 export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
-  const { tools, coordinatorEmail } = useData();
+  const { tools, coordinatorEmail, setTools } = useData();
+  const { toast } = useToast();
   const [selectedTool, setSelectedTool] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toolData, setToolData] = useState(null);
+  const [isStopDialogOpen, setIsStopDialogOpen] = useState(false);
+  const [stoppingTool, setStoppingTool] = useState(false);
 
   // Auto-load tool if toolId prop is provided
   useEffect(() => {
@@ -271,10 +276,15 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
         return questions;
       };
 
+      // Get tool status from tools array
+      const currentTool = tools.find(t => t.id === toolId);
+      const toolStatus = currentTool?.status || 'active';
+
       setToolData({
         toolId,
         toolName: toolInfo[KOBO_CONFIG.TOOL_NAME_FIELD],
         maturity,
+        status: toolStatus,
         innovators: innovatorData,
         domainExperts: domainExpertData,
         directUsers: {
@@ -298,6 +308,100 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
     fetchToolData(selectedTool);
   };
 
+  const handleStopTool = () => {
+    setIsStopDialogOpen(true);
+  };
+
+  const handleConfirmStop = async () => {
+    if (!toolData) return;
+
+    setStoppingTool(true);
+    const currentDateTime = new Date();
+    const formattedDateTime = currentDateTime.toLocaleString();
+    const isoDateTime = currentDateTime.toISOString();
+
+    try {
+      const calculationMethod = (toolData as any).maturity === "advance_stage" ? "MDII Regular Version" : "MDII Exante Version";
+      const csvApiUrl = `${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/score_kobo_tool?code=${import.meta.env.VITE_AZURE_FUNCTION_KEY}&tool_id=${(toolData as any).toolId}&calculation_method=${encodeURIComponent(calculationMethod)}&column_names=column_names`;
+      const img = new Image();
+      img.src = csvApiUrl;
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const apiUrl = `/api/score-tool?tool_id=${(toolData as any).toolId}`;
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) throw new Error(`Failed to trigger tool stop: ${response.statusText}`);
+
+      setTools((prev) =>
+        prev.map((tool) => (tool.id === (toolData as any).toolId ? { ...tool, status: "stopped" } : tool))
+      );
+
+      // Update local toolData status
+      setToolData((prev: any) => ({ ...prev, status: "stopped" }));
+
+      toast({
+        title: "Tool Stopped",
+        description: `${(toolData as any).toolName} submissions stopped at ${formattedDateTime}. Email will be sent shortly.`,
+      });
+
+      setTimeout(async () => {
+        try {
+          const flowUrl = "https://default6afa0e00fa1440b78a2e22a7f8c357.d5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/080a15cb2b9b4387ac23f1a7978a8bbb/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XlWqhTpqNuxZJkvKeCoWziBX5Vhgtix8zdUq0IF8Npw";
+          
+          const pdfReportLink = `https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${(toolData as any).toolId}`;
+          
+          const payload = {
+            tool_id: (toolData as any).toolId,
+            tool_name: (toolData as any).toolName,
+            tool_maturity: (toolData as any).maturity || "unknown",
+            stopped_at: formattedDateTime,
+            stopped_at_iso: isoDateTime,
+            timestamp: currentDateTime.getTime(),
+            pdf_report_link: pdfReportLink
+          };
+
+          const flowResponse = await fetch(flowUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!flowResponse.ok) {
+            throw new Error(`Failed to trigger email flow: ${flowResponse.statusText}`);
+          }
+
+          toast({
+            title: "Email Triggered",
+            description: `Email for tool ${(toolData as any).toolId} has been sent with Score report link attached.`,
+          });
+        } catch (flowErr: any) {
+          console.error("Error triggering Power Automate:", flowErr);
+          toast({
+            title: "Error",
+            description: `Failed to trigger email: ${flowErr.message}`,
+            variant: "destructive",
+          });
+        }
+      }, 6000);
+
+      setIsStopDialogOpen(false);
+    } catch (err: any) {
+      console.error("Error stopping tool:", err);
+      toast({
+        title: "Error",
+        description: err.message.includes("Failed to fetch") || err.message.includes("CORS")
+          ? "Unable to connect to the server. Please try again later or contact support."
+          : `Failed to stop tool: ${err.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setStoppingTool(false);
+    }
+  };
+
   const getStatusIcon = (submitted: boolean) => {
     return submitted ?
       <CheckCircle className="h-4 w-4 text-green-600" /> :
@@ -308,10 +412,7 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
     <div className="min-h-screen">
       <div className="max-w-[1550px] mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground"> 
-             {/* className="text-2xl font-semibold text-gray-900 mb-2" */}
-            {/* <span style={{ color: "#591fd5" }}>MDII</span>{" "} */}
-            {/* <span style={{ color: "#cbced4" }}>|</span>  */}
+          <h1 className="text-3xl font-bold text-foreground">
             Tool Details
           </h1>
           <p className="text-gray-600">View detailed submissions for your assigned tools</p>
@@ -348,13 +449,37 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
         {toolData && (
           <>
             <div className="bg-white border rounded-lg p-6 mb-6">
-              <h2 className="text-lg font-medium mb-2">{(toolData as any).toolName}</h2>
-              <div className="flex gap-2">
-                <span className="text-sm text-gray-600">Tool ID: {(toolData as any).toolId}</span>
-                <span className="text-sm text-gray-400">•</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                  {(toolData as any).maturity.charAt(0).toUpperCase() + (toolData as any).maturity.slice(1)}
-                </span>
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1">
+                  <h2 className="text-lg font-medium mb-2">{(toolData as any).toolName}</h2>
+                  <div className="flex gap-2">
+                    <span className="text-sm text-gray-600">Tool ID: {(toolData as any).toolId}</span>
+                    <span className="text-sm text-gray-400">•</span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      {(toolData as any).maturity.charAt(0).toUpperCase() + (toolData as any).maturity.slice(1)}
+                    </span>
+                    <span className="text-sm text-gray-400">•</span>
+                    <Badge className={(toolData as any).status === "active" ? "bg-success/20 text-success border-success/30" : ""} variant={(toolData as any).status === "stopped" ? "secondary" : "default"}>
+                      {(toolData as any).status === "active" ? "Active" : "Stopped"}
+                    </Badge>
+                  </div>
+                </div>
+                {(toolData as any).status === "active" && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleStopTool}
+                    disabled={stoppingTool}
+                    className="gap-2"
+                  >
+                    {stoppingTool ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <StopCircle className="h-4 w-4" />
+                    )}
+                    Stop Tool
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -507,6 +632,33 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
           </div>
         )}
       </div>
+
+      {/* Stop Confirmation Dialog */}
+      <Dialog open={isStopDialogOpen} onOpenChange={setIsStopDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Stop Tool</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to stop submissions for {toolData ? (toolData as any).toolName : ''}? This will close the evaluation and trigger the report generation.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsStopDialogOpen(false)} disabled={stoppingTool}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmStop} disabled={stoppingTool}>
+              {stoppingTool ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Stopping...
+                </>
+              ) : (
+                'Confirm Stop'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
