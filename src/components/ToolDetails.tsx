@@ -1,4 +1,4 @@
-// ToolDetails.tsx
+// ToolDetails.tsx - Updated component with Stop functionality
 import { useState, useEffect } from "react";
 import { Search, FileText, Calendar, User, MapPin, Loader2, CheckCircle, XCircle, AlertCircle, StopCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +48,8 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
   const [toolData, setToolData] = useState(null);
   const [isStopDialogOpen, setIsStopDialogOpen] = useState(false);
   const [stoppingTool, setStoppingTool] = useState(false);
+  const [domainExpertsAssigned, setDomainExpertsAssigned] = useState(false);
+  const [checkingAssignment, setCheckingAssignment] = useState(false);
 
   // Auto-load tool if toolId prop is provided
   useEffect(() => {
@@ -61,8 +63,47 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
     setLoading(true);
     setError(null);
     setToolData(null);
+    setDomainExpertsAssigned(false);
+    setCheckingAssignment(true);
 
     try {
+      // Check if domain experts have been assigned by checking all three assignment forms
+      const assignmentFormIds = [
+        'ap6dUEDwX7KUsKLFZUD7kb', // regular
+        'au52CRd6ATzV7S36WcAdDu', // exante
+        'aDrD6ZuThQweedHFoogbi4'  // assignment form
+      ];
+
+      let isAssigned = false;
+      
+      try {
+        const assignmentChecks = await Promise.all(
+          assignmentFormIds.map(formId =>
+            fetch(getApiUrl(`assets/${formId}/data.json`, "assignmentCheck"))
+          )
+        );
+
+        for (const res of assignmentChecks) {
+          if (res.ok) {
+            const text = await res.text();
+            if (text) {
+              const data = JSON.parse(text);
+              const found = data.results.some((r: any) => 
+                String(r["group_intro/Q_13110000"] || r["Q_13110000"] || "").trim() === toolId
+              );
+              if (found) {
+                isAssigned = true;
+                break;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Error checking domain expert assignment:", err);
+      }
+
+      setDomainExpertsAssigned(isAssigned);
+      setCheckingAssignment(false);
       // Fetch maturity level
       const mainRes = await fetch(getApiUrl(`assets/${KOBO_CONFIG.MAIN_FORM_ID}/data.json`, "mainForm"));
       
@@ -408,6 +449,15 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
       <XCircle className="h-4 w-4 text-gray-400" />;
   };
 
+  const handleAssignDomainExperts = () => {
+    if (!toolData) return;
+    
+    // Open KoboToolbox form with pre-filled tool ID
+    const toolId = (toolData as any).toolId;
+    const formUrl = `https://ee.kobotoolbox.org/x/y8TjauDs?&d[Q_13110000]=${encodeURIComponent(toolId)}`;
+    window.open(formUrl, '_blank');
+  };
+
   return (
     <div className="min-h-screen">
       <div className="max-w-[1550px] mx-auto">
@@ -513,28 +563,50 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
 
               <div className="bg-white border rounded-lg">
                 <div className="px-6 py-4 border-b">
-                  <h3 className="text-lg font-medium">Domain Experts</h3>
-                  <p className="text-sm text-gray-600">Expert submissions by domain</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium">Domain Experts</h3>
+                      <p className="text-sm text-gray-600">Expert submissions by domain</p>
+                    </div>
+                    {!checkingAssignment && !domainExpertsAssigned && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAssignDomainExperts}
+                        className="gap-2"
+                      >
+                        <User className="h-4 w-4" />
+                        Assign Domain Experts
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="p-6">
-                  <div className="space-y-3">
-                    {(toolData as any).domainExperts.map((expert: any) => (
-                      <div key={expert.category} className="flex items-center justify-between py-2 border-b last:border-b-0">
-                        <div className="flex items-center gap-3">
-                          {getStatusIcon(expert.submitted)}
-                          <span className="text-sm">{expert.category}</span>
+                  {checkingAssignment ? (
+                    <div className="text-center py-4">
+                      <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-gray-400" />
+                      <p className="text-sm text-gray-500">Checking assignment status...</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {(toolData as any).domainExperts.map((expert: any) => (
+                        <div key={expert.category} className="flex items-center justify-between py-2 border-b last:border-b-0">
+                          <div className="flex items-center gap-3">
+                            {getStatusIcon(expert.submitted)}
+                            <span className="text-sm">{expert.category}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-medium ${expert.submitted ? 'text-green-600' : 'text-gray-500'}`}>
+                              {expert.submitted ? 'Submitted' : 'Not Submitted'}
+                            </span>
+                            {expert.submitted && (
+                              <span className="text-xs text-gray-500">({expert.count})</span>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-sm font-medium ${expert.submitted ? 'text-green-600' : 'text-gray-500'}`}>
-                            {expert.submitted ? 'Submitted' : 'Not Submitted'}
-                          </span>
-                          {expert.submitted && (
-                            <span className="text-xs text-gray-500">({expert.count})</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
