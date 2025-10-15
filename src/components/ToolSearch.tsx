@@ -255,25 +255,25 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Tool Management</h1>
-        <p className="text-muted-foreground">Search and manage research tools</p>
+        <p className="text-muted-foreground text-sm">Search and manage research tools</p>
       </div>
 
       {/* Search Bar */}
-      <Card className="shadow-[var(--shadow-card)] p-0">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl p-0">
+      <Card className="shadow-[var(--shadow-card)]">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Search className="w-4 h-4" />
             Search Tools
           </CardTitle>
-          <CardDescription>Find specific tools by name, coordinator, or tool ID</CardDescription>
+          <CardDescription className="text-sm">Find specific tools by name, coordinator, or tool ID</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 p-0" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               type="text"
               placeholder="Search by tool name, coordinator, or tool ID..."
@@ -288,16 +288,17 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
       {/* Loading and Error States */}
       {loading && (
         <Card className="shadow-[var(--shadow-card)]">
-          <CardContent className="text-center py-8">
-            <p className="text-lg font-medium text-foreground">Loading tools...</p>
+          <CardContent className="text-center py-6">
+            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-600" />
+            <p className="text-sm font-medium text-foreground">Loading tools...</p>
           </CardContent>
         </Card>
       )}
       {error && (
         <Card className="shadow-[var(--shadow-card)]">
-          <CardContent className="text-center py-8">
-            <p className="text-lg font-medium text-foreground">Error</p>
-            <p className="text-muted-foreground">{error}</p>
+          <CardContent className="text-center py-6">
+            <p className="text-sm font-medium text-foreground">Error</p>
+            <p className="text-muted-foreground text-sm">{error}</p>
           </CardContent>
         </Card>
       )}
@@ -310,10 +311,10 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
             <TabsTrigger value="stopped">Closed Evaluation ({stoppedTools.length})</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="active" className="space-y-4 mt-6">
+          <TabsContent value="active" className="space-y-3 mt-4">
             {filteredActiveTools.length > 0 ? (
               <>
-                <div className="grid gap-4">
+                <div className="grid gap-3">
                   {paginatedTools.map((tool) => (
                     <Card
                       key={tool.id}
@@ -322,12 +323,10 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
                       }`}
                       onClick={() => handleSelectTool(tool.id)}
                     >
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <CardTitle className="text-lg">{tool.name} - {tool.id}</CardTitle>
-                            {getStatusBadge(tool.status)}
-                          </div>
+                      <CardHeader className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <CardTitle className="text-base font-medium">{tool.name} - {tool.id}</CardTitle>
+                          {getStatusBadge(tool.status)}
                         </div>
                       </CardHeader>
                     </Card>
@@ -335,12 +334,12 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
                 </div>
 
                 {filteredActiveTools.length > toolsPerPage && (
-                  <div className="flex items-center justify-between mt-4">
-                    <Button variant="outline" disabled={currentPage === 1} onClick={handlePreviousPage}>
+                  <div className="flex items-center justify-between pt-2">
+                    <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={handlePreviousPage}>
                       Previous
                     </Button>
-                    <span className="text-muted-foreground">Page {currentPage} of {totalPages}</span>
-                    <Button variant="outline" disabled={currentPage === totalPages} onClick={handleNextPage}>
+                    <span className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</span>
+                    <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={handleNextPage}>
                       Next
                     </Button>
                   </div>
@@ -349,17 +348,17 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
             ) : (
               <Card className="shadow-[var(--shadow-card)]">
                 <CardContent className="text-center py-8">
-                  <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-lg font-medium text-foreground">No active tools found</p>
+                  <Search className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-base font-medium text-foreground">No active tools found</p>
                 </CardContent>
               </Card>
             )}
           </TabsContent>
 
-          <TabsContent value="stopped" className="space-y-4 mt-6">
+          <TabsContent value="stopped" className="space-y-3 mt-4">
             {filteredStoppedTools.length > 0 ? (
               <>
-                <div className="grid gap-4">
+                <div className="grid gap-3">
                   {paginatedTools.map((tool) => (
                     <Card
                       key={tool.id}
@@ -368,9 +367,9 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
                       }`}
                       onClick={() => handleSelectTool(tool.id)}
                     >
-                      <CardHeader>
+                      <CardHeader className="py-3 px-4">
                         <div className="flex items-center gap-3">
-                          <CardTitle className="text-lg">{tool.name} - {tool.id}</CardTitle>
+                          <CardTitle className="text-base font-medium">{tool.name} - {tool.id}</CardTitle>
                           {getStatusBadge(tool.status)}
                         </div>
                       </CardHeader>
@@ -379,12 +378,12 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
                 </div>
 
                 {filteredStoppedTools.length > toolsPerPage && (
-                  <div className="flex items-center justify-between mt-4">
-                    <Button variant="outline" disabled={currentPage === 1} onClick={handlePreviousPage}>
+                  <div className="flex items-center justify-between pt-2">
+                    <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={handlePreviousPage}>
                       Previous
                     </Button>
-                    <span className="text-muted-foreground">Page {currentPage} of {totalPages}</span>
-                    <Button variant="outline" disabled={currentPage === totalPages} onClick={handleNextPage}>
+                    <span className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</span>
+                    <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={handleNextPage}>
                       Next
                     </Button>
                   </div>
@@ -393,8 +392,8 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
             ) : (
               <Card className="shadow-[var(--shadow-card)]">
                 <CardContent className="text-center py-8">
-                  <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-lg font-medium text-foreground">No stopped tools found</p>
+                  <Search className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-base font-medium text-foreground">No stopped tools found</p>
                 </CardContent>
               </Card>
             )}
