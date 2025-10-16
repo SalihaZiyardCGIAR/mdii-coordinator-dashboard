@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Search, Loader2, CheckCircle, XCircle, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useData } from "@/context/DataContext";
-import { getApiUrl } from "@/config/apiConfig";
-import { KOBO_CONFIG } from "@/config/koboConfig";
 import DataTable from "./DataTable";
+import { fetchToolDetails, ToolDetailsData } from "@/context/toolUtils";
 
 interface Tool {
   id: string;
@@ -31,14 +30,13 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState("active");
   const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
-  const [toolDetails, setToolDetails] = useState(null);
+  const [toolDetails, setToolDetails] = useState<ToolDetailsData | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   
   const { tools, loading, error } = useData();
   const toolsPerPage = 10;
 
-  // Filter tools by status first, then by search query
   const activeTools = tools.filter(tool => tool.status === "active");
   const stoppedTools = tools.filter(tool => tool.status === "stopped");
 
@@ -56,177 +54,26 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
       tool.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Pagination logic based on active tab
   const currentFilteredTools = activeTab === "active" ? filteredActiveTools : filteredStoppedTools;
   const totalPages = Math.ceil(currentFilteredTools.length / toolsPerPage);
   const startIndex = (currentPage - 1) * toolsPerPage;
   const paginatedTools = currentFilteredTools.slice(startIndex, startIndex + toolsPerPage);
 
-  // Fetch tool details
-  const fetchToolDetails = async (toolId: string) => {
+  const handleSelectTool = async (toolId: string) => {
+    setSelectedToolId(toolId);
     setLoadingDetails(true);
     setDetailsError(null);
     setToolDetails(null);
 
     try {
-      const mainRes = await fetch(getApiUrl(`assets/${KOBO_CONFIG.MAIN_FORM_ID}/data.json`, "mainForm"));
-      if (!mainRes.ok) throw new Error(`Failed to fetch main form: ${mainRes.statusText}`);
-      
-      const text = await mainRes.text();
-      if (!text) throw new Error("Empty response from main form");
-
-      const mainData = JSON.parse(text);
-      const toolInfo = mainData.results.find(r => r[KOBO_CONFIG.TOOL_ID_FIELD] === toolId);
-      
-      if (!toolInfo) throw new Error("Tool not found");
-
-      const maturity = toolInfo[KOBO_CONFIG.MATURITY_FIELD];
-      if (!maturity || (maturity !== 'advance_stage' && maturity !== 'early_stage')) {
-        throw new Error(`Invalid maturity level: ${maturity}`);
-      }
-
-      const ut3FormId = maturity === 'advance_stage' ? KOBO_CONFIG.USERTYPE3_FORMS.advance_stage : KOBO_CONFIG.USERTYPE3_FORMS.early_stage;
-      const ut4FormId = maturity === 'advance_stage' ? KOBO_CONFIG.USERTYPE4_FORMS.advance_stage : KOBO_CONFIG.USERTYPE4_FORMS.early_stage;
-      const domainFormId = KOBO_CONFIG.DOMAIN_EXPERT_FORMS[maturity];
-
-      // Fetch all in parallel
-      const [innovatorRes, domainRes, ut3DataRes, ut4DataRes, ut3FormRes, ut4FormRes] = await Promise.all([
-        Promise.all(Object.entries(KOBO_CONFIG.INNOVATOR_FORMS).map(([, formId]) => fetch(getApiUrl(`assets/${formId}/data.json`, "innovator")))),
-        fetch(getApiUrl(`assets/${domainFormId}/data.json`, "domainExperts")),
-        fetch(getApiUrl(`assets/${ut3FormId}/data.json`, "ut3")),
-        fetch(getApiUrl(`assets/${ut4FormId}/data.json`, "ut4")),
-        fetch(getApiUrl(`assets/${ut3FormId}.json`, "ut3Form")),
-        fetch(getApiUrl(`assets/${ut4FormId}.json`, "ut4Form"))
-      ]);
-
-      // Process innovators
-      const innovatorData = await Promise.all(
-        innovatorRes.map(async (res, index) => {
-          const [role] = Object.entries(KOBO_CONFIG.INNOVATOR_FORMS)[index];
-          try {
-            if (!res.ok) return { role: role as string, submitted: false, count: 0 };
-            const resText = await res.text();
-            const data = resText ? JSON.parse(resText) : { results: [] };
-            const matching = data.results.filter(r => 
-              String(r["group_intro/Q_13110000"] || r["group_requester/Q_13110000"] || "").trim() === toolId
-            );
-            return { role: role as string, submitted: matching.length > 0, count: matching.length };
-          } catch (err) {
-            return { role: role as string, submitted: false, count: 0 };
-          }
-        })
-      );
-
-      // Process domain experts
-      let domainExpertData = KOBO_CONFIG.DOMAIN_CATEGORIES[maturity].map(category => ({
-        category,
-        submitted: false,
-        count: 0
-      }));
-
-      try {
-        if (domainRes.ok) {
-          const domainText = await domainRes.text();
-          const domainData = domainText ? JSON.parse(domainText) : { results: [] };
-          const domainMatching = domainData.results.filter(r => String(r["group_intro/Q_13110000"] || "").trim() === toolId);
-
-          const categorySubmissions = new Map();
-          domainMatching.forEach(record => {
-            const expertiseString = String(
-              maturity === 'early_stage' ? record["group_individualinfo/Q_22300000"] || "" : record["group_intro_001/Q_22300000"] || ""
-            ).trim().toLowerCase();
-
-            if (expertiseString) {
-              expertiseString.split(/\s+/).forEach(code => {
-                const fullName = KOBO_CONFIG.DOMAIN_CODE_MAPPING[code];
-                if (fullName) categorySubmissions.set(fullName, (categorySubmissions.get(fullName) || 0) + 1);
-              });
-            }
-          });
-
-          domainExpertData = KOBO_CONFIG.DOMAIN_CATEGORIES[maturity].map(category => ({
-            category,
-            submitted: categorySubmissions.has(category),
-            count: categorySubmissions.get(category) || 0
-          }));
-        }
-      } catch (err) {
-        console.warn("Error processing domain experts:", err);
-      }
-
-      // Process user surveys
-      let ut3Data = { results: [] };
-      let ut4Data = { results: [] };
-      let ut3Form = { content: {} };
-      let ut4Form = { content: {} };
-
-      try {
-        if (ut3DataRes.ok) {
-          const ut3Text = await ut3DataRes.text();
-          ut3Data = ut3Text ? JSON.parse(ut3Text) : { results: [] };
-        }
-        if (ut4DataRes.ok) {
-          const ut4Text = await ut4DataRes.text();
-          ut4Data = ut4Text ? JSON.parse(ut4Text) : { results: [] };
-        }
-        if (ut3FormRes.ok) {
-          const ut3FormText = await ut3FormRes.text();
-          ut3Form = ut3FormText ? JSON.parse(ut3FormText) : { content: {} };
-        }
-        if (ut4FormRes.ok) {
-          const ut4FormText = await ut4FormRes.text();
-          ut4Form = ut4FormText ? JSON.parse(ut4FormText) : { content: {} };
-        }
-      } catch (err) {
-        console.warn("Error processing user surveys:", err);
-      }
-
-      const getToolId = (sub: any) => String(sub["group_intro/Q_13110000"] || sub["group_requester/Q_13110000"] || sub["Q_13110000"] || "").trim();
-      const ut3Matching = ut3Data.results.filter(r => getToolId(r) === toolId);
-      const ut4Matching = ut4Data.results.filter(r => getToolId(r) === toolId);
-
-      const extractQuestions = (form: any) => {
-        const questions = [];
-        const content = form.content?.survey || [];
-        content.forEach((item: any) => {
-          if (item.type && item.name && !item.name.startsWith('_')) {
-            questions.push({
-              name: item.name,
-              label: item.label?.[0] || item.label || item.name,
-              type: item.type,
-              choices: item.select_from_list_name ? 
-                (form.content?.choices?.[item.select_from_list_name] || []).map((c: any) => ({
-                  name: c.name,
-                  label: c.label?.[0] || c.label || c.name
-                })) : []
-            });
-          }
-        });
-        return questions;
-      };
-
-      setToolDetails({
-        toolId,
-        toolName: toolInfo[KOBO_CONFIG.TOOL_NAME_FIELD],
-        maturity,
-        innovators: innovatorData,
-        domainExperts: domainExpertData,
-        directUsers: { data: ut3Matching, questions: extractQuestions(ut3Form) },
-        indirectUsers: { data: ut4Matching, questions: extractQuestions(ut4Form) }
-      });
+      const data = await fetchToolDetails(toolId, tools);
+      setToolDetails(data);
+      onToolSelect?.(toolId);
     } catch (err: any) {
       setDetailsError(err.message);
     } finally {
       setLoadingDetails(false);
     }
-  };
-
-  const handleSelectTool = (toolId: string) => {
-    setSelectedToolId(toolId);
-    fetchToolDetails(toolId);
-    
-    // Notify parent component of tool selection
-    onToolSelect?.(toolId);
   };
 
   const getStatusBadge = (status: string) => {
@@ -252,17 +99,26 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     setCurrentPage(1);
+    setSelectedToolId(null);
+    setToolDetails(null);
+    setDetailsError(null);
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
+    <div className="space-y-4 relative">
+      {loadingDetails && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+            <p className="text-lg font-medium text-gray-800">Loading tool details...</p>
+          </div>
+        </div>
+      )}
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Tool Management</h1>
         <p className="text-muted-foreground text-sm">Search and manage research tools</p>
       </div>
 
-      {/* Search Bar */}
       <Card className="shadow-[var(--shadow-card)]">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -285,7 +141,6 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
         </CardContent>
       </Card>
 
-      {/* Loading and Error States */}
       {loading && (
         <Card className="shadow-[var(--shadow-card)]">
           <CardContent className="text-center py-6">
@@ -303,7 +158,6 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
         </Card>
       )}
 
-      {/* Tabs for Active and Stopped Tools */}
       {!loading && !error && (
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -401,8 +255,7 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
         </Tabs>
       )}
 
-      {/* Tool Details Section */}
-      {selectedToolId && (
+      {selectedToolId && !loadingDetails && (
         <div className="space-y-6 pt-6 border-t">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Tool Details</h2>
@@ -410,15 +263,6 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
               Clear
             </Button>
           </div>
-
-          {loadingDetails && (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-                <p className="text-lg font-medium">Loading details...</p>
-              </CardContent>
-            </Card>
-          )}
 
           {detailsError && (
             <Card className="border-l-4 border-l-destructive">
@@ -428,12 +272,12 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
             </Card>
           )}
 
-          {toolDetails && !loadingDetails && (
+          {toolDetails && (
             <>
               <Card>
                 <CardHeader>
-                  <CardTitle>{(toolDetails as any).toolName}</CardTitle>
-                  <CardDescription>ID: {(toolDetails as any).toolId} • Maturity: {(toolDetails as any).maturity}</CardDescription>
+                  <CardTitle>{toolDetails.toolName}</CardTitle>
+                  <CardDescription>ID: {toolDetails.toolId} • Maturity: {toolDetails.maturity}</CardDescription>
                 </CardHeader>
               </Card>
 
@@ -443,7 +287,7 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
                     <CardTitle className="text-lg">Innovators Team</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {(toolDetails as any).innovators.map((i: any) => (
+                    {toolDetails.innovators.map((i) => (
                       <div key={i.role} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {getStatusIcon(i.submitted)}
@@ -462,7 +306,7 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
                     <CardTitle className="text-lg">Domain Experts</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {(toolDetails as any).domainExperts.map((e: any) => (
+                    {toolDetails.domainExperts.map((e) => (
                       <div key={e.category} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {getStatusIcon(e.submitted)}
@@ -485,44 +329,44 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold">
-                        {(toolDetails as any).innovators.filter((i: any) => i.submitted).length}/{(toolDetails as any).innovators.length}
+                        {toolDetails.innovators.filter((i) => i.submitted).length}/{toolDetails.innovators.length}
                       </div>
                       <div className="text-sm text-gray-600">Innovators</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold">
-                        {(toolDetails as any).domainExperts.filter((e: any) => e.submitted).length}/{(toolDetails as any).domainExperts.length}
+                        {toolDetails.domainExperts.filter((e) => e.submitted).length}/{toolDetails.domainExperts.length}
                       </div>
                       <div className="text-sm text-gray-600">Domain Experts</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold">{(toolDetails as any).directUsers.data.length}</div>
+                      <div className="text-2xl font-bold">{toolDetails.directUsers.data.length}</div>
                       <div className="text-sm text-gray-600">Direct Users</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold">{(toolDetails as any).indirectUsers.data.length}</div>
+                      <div className="text-2xl font-bold">{toolDetails.indirectUsers.data.length}</div>
                       <div className="text-sm text-gray-600">Indirect Users</div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {((toolDetails as any).directUsers.data.length > 0 || (toolDetails as any).indirectUsers.data.length > 0) && (
+              {(toolDetails.directUsers.data.length > 0 || toolDetails.indirectUsers.data.length > 0) && (
                 <Card>
                   <CardHeader>
                     <CardTitle>User Survey Responses</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {(toolDetails as any).directUsers.data.length > 0 && (
+                    {toolDetails.directUsers.data.length > 0 && (
                       <div>
-                        <h4 className="font-semibold mb-4">Direct Users ({(toolDetails as any).directUsers.data.length})</h4>
-                        <DataTable data={(toolDetails as any).directUsers.data} questions={(toolDetails as any).directUsers.questions} />
+                        <h4 className="font-semibold mb-4">Direct Users ({toolDetails.directUsers.data.length})</h4>
+                        <DataTable data={toolDetails.directUsers.data} questions={toolDetails.directUsers.questions} />
                       </div>
                     )}
-                    {(toolDetails as any).indirectUsers.data.length > 0 && (
+                    {toolDetails.indirectUsers.data.length > 0 && (
                       <div>
-                        <h4 className="font-semibold mb-4">Indirect Users ({(toolDetails as any).indirectUsers.data.length})</h4>
-                        <DataTable data={(toolDetails as any).indirectUsers.data} questions={(toolDetails as any).indirectUsers.questions} />
+                        <h4 className="font-semibold mb-4">Indirect Users ({toolDetails.indirectUsers.data.length})</h4>
+                        <DataTable data={toolDetails.indirectUsers.data} questions={toolDetails.indirectUsers.questions} />
                       </div>
                     )}
                   </CardContent>
