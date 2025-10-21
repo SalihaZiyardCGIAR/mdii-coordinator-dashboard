@@ -8,6 +8,8 @@ import { KOBO_CONFIG } from "@/config/koboConfig";
 import { getApiUrl } from "@/config/apiConfig";
 import { DataContext } from "@/context/DataContext";
 
+const ADMIN_EMAIL = "mdii@cgiar.org";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -36,6 +38,9 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Check if admin login
+      const isAdmin = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
       // Fetch main form submissions
       const mainRes = await fetch(getApiUrl(`assets/${KOBO_CONFIG.MAIN_FORM_ID}/data.json`, "mainForm"));
       if (!mainRes.ok) {
@@ -79,39 +84,43 @@ const Login = () => {
         new Date(a._submission_time).getTime() - new Date(b._submission_time).getTime()
       );
 
-      // Build current coordinators map
-      const currentCoord: Record<string, string> = {};
-      mainSubs.forEach((sub: any) => {
-        if (sub.coordinator_email) {
-          currentCoord[sub[KOBO_CONFIG.TOOL_ID_FIELD]] = sub.coordinator_email;
-        }
-      });
-      changeSubs.forEach((ch: any) => {
-        const toolId = ch.tool_id;
-        const newEmail = ch.Email_of_the_Coordinator;
-        if (toolId && newEmail) {
-          currentCoord[toolId] = newEmail;
-        }
-      });
-
-      // Check if email is a coordinator
-      const coordinators = new Set(Object.values(currentCoord));
-      if (!coordinators.has(email)) {
-        toast({
-          title: "Access Denied",
-          description: "Email not registered as a coordinator.",
-          variant: "destructive",
+      // For non-admin, validate coordinator access
+      if (!isAdmin) {
+        // Build current coordinators map
+        const currentCoord: Record<string, string> = {};
+        mainSubs.forEach((sub: any) => {
+          if (sub.coordinator_email) {
+            currentCoord[sub[KOBO_CONFIG.TOOL_ID_FIELD]] = sub.coordinator_email;
+          }
         });
-        return;
+        changeSubs.forEach((ch: any) => {
+          const toolId = ch.tool_id;
+          const newEmail = ch.Email_of_the_Coordinator;
+          if (toolId && newEmail) {
+            currentCoord[toolId] = newEmail;
+          }
+        });
+
+        // Check if email is a coordinator
+        const coordinators = new Set(Object.values(currentCoord));
+        if (!coordinators.has(email)) {
+          toast({
+            title: "Access Denied",
+            description: "Email not registered as a coordinator.",
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
-      // Store email and data in context
+      // Store email, admin status, and data in context
       localStorage.setItem("coordinatorEmail", email);
-      setData({ mainSubs, changeSubs, evalSubs, coordinatorEmail: email });
+      localStorage.setItem("isAdmin", isAdmin.toString());
+      setData({ mainSubs, changeSubs, evalSubs, coordinatorEmail: email, isAdmin });
 
       toast({
         title: "Login Successful",
-        description: "Redirecting to dashboard...",
+        description: isAdmin ? "Welcome Admin! Redirecting to admin dashboard..." : "Redirecting to dashboard...",
       });
       navigate("/dashboard");
     } catch (error) {
