@@ -171,7 +171,7 @@ const Login = () => {
               className="w-full bg-gradient-to-r from-forest to-primary hover:from-forest/90 hover:to-primary/90 text-primary-foreground"
               disabled={isLoading}
             >
-              {isLoading ? "Connecting to KoBo..." : "Access Dashboard"}
+              {isLoading ? "Logging in..." : "Access Dashboard"}
             </Button>
           </form>
         </CardContent>
