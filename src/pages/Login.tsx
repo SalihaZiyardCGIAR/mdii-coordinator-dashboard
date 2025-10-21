@@ -7,12 +7,15 @@ import { useToast } from "@/hooks/use-toast";
 import { KOBO_CONFIG } from "@/config/koboConfig";
 import { getApiUrl } from "@/config/apiConfig";
 import { DataContext } from "@/context/DataContext";
+import { Scale } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ADMIN_EMAIL = "mdii@cgiar.org";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"coordinator" | "admin">("coordinator");
   const navigate = useNavigate();
   const { toast } = useToast();
   const dataContext = useContext(DataContext);
@@ -40,6 +43,27 @@ const Login = () => {
     try {
       // Check if admin login
       const isAdmin = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+      // Validate login mode matches email
+      if (activeTab === "admin" && !isAdmin) {
+        toast({
+          title: "Access Denied",
+          description: "Invalid admin credentials.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (activeTab === "coordinator" && isAdmin) {
+        toast({
+          title: "Wrong Login Type",
+          description: "Please use the admin login tab.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
 
       // Fetch main form submissions
       const mainRes = await fetch(getApiUrl(`assets/${KOBO_CONFIG.MAIN_FORM_ID}/data.json`, "mainForm"));
@@ -120,7 +144,7 @@ const Login = () => {
 
       toast({
         title: "Login Successful",
-        description: isAdmin ? "Welcome Admin! Redirecting to admin dashboard..." : "Redirecting to dashboard...",
+        description: isAdmin ? "Welcome Admin!" : "Redirecting to dashboard...",
       });
       navigate("/dashboard");
     } catch (error) {
@@ -140,40 +164,72 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-[var(--shadow-elevated)]">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-forest to-primary rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+            <Scale className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold text-foreground">MDII Coordinator Portal</CardTitle>
+            <CardTitle className="text-2xl font-bold text-foreground">MDII Portal</CardTitle>
             <CardDescription className="text-muted-foreground">
               CGIAR Research Tools Dashboard
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-foreground">
-                Coordinator Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-forest to-primary hover:from-forest/90 hover:to-primary/90 text-primary-foreground"
-              disabled={isLoading}
-            >
-              {isLoading ? "Logging in..." : "Access Dashboard"}
-            </Button>
-          </form>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "coordinator" | "admin")} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="coordinator">Coordinator</TabsTrigger>
+              <TabsTrigger value="admin">Admin</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="coordinator">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="email-coord" className="text-sm font-medium text-foreground">
+                    Email Address
+                  </label>
+                  <Input
+                    id="email-coord"
+                    type="email"
+                    placeholder="coordinator@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-forest to-primary hover:from-forest/90 hover:to-primary/90 text-primary-foreground"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Logging in..." : "Access Dashboard"}
+                </Button>
+              </form>
+            </TabsContent>
+            
+            <TabsContent value="admin">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="email-admin" className="text-sm font-medium text-foreground">
+                    Admin Email
+                  </label>
+                  <Input
+                    id="email-admin"
+                    type="email"
+                    placeholder="admin@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-forest to-primary hover:from-forest/90 hover:to-primary/90 text-primary-foreground"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Logging in..." : "Admin Login"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
