@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Clock, AlertCircle, Users, Target } from "lucide-react";
+import { CheckCircle, Clock, Users, Target } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { Loader } from "./Loader";
 import { ToolSearch } from "./ToolSearch";
@@ -13,8 +13,7 @@ interface DashboardOverviewProps {
 }
 
 export const DashboardOverview = ({ coordinatorEmail, onToolSelect }: DashboardOverviewProps) => {
-  const { stats, recentActivity, loading, error, fetchData } = useData();
-  const [debugData, setDebugData] = useState<any>(null);
+  const { stats, loading, error, fetchData } = useData();
 
   // Retry fetching data on component mount if there's an error
   useEffect(() => {
@@ -26,29 +25,10 @@ export const DashboardOverview = ({ coordinatorEmail, onToolSelect }: DashboardO
     }
   }, [error, fetchData]);
 
-  // Debug: Store raw data for inspection
-  useEffect(() => {
-    if (!loading && !error) {
-      setDebugData({ stats, recentActivity });
-    }
-  }, [stats, recentActivity, loading, error]);
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle className="w-4 h-4 text-success" />;
-      case "ongoing":
-        return <Clock className="w-4 h-4 text-warning" />;
-      default:
-        return <AlertCircle className="w-4 h-4 text-info" />;
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     const variants = {
-      completed: "default",
-      ongoing: "secondary",
-      pending: "outline",
+      stopped: "secondary",
+      active: "outline",
     } as const;
 
     return (
@@ -91,18 +71,7 @@ export const DashboardOverview = ({ coordinatorEmail, onToolSelect }: DashboardO
 
       {/* Stats Grid */}
       {!loading && !error && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          {/* <Card className="shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tools</CardTitle>
-              <Target className="h-4 w-4 text-forest" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats?.totalTools ?? 0}</div>
-              <p className="text-xs text-muted-foreground">All research instruments</p>
-            </CardContent>
-          </Card> */}
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Appointed</CardTitle>
@@ -116,7 +85,7 @@ export const DashboardOverview = ({ coordinatorEmail, onToolSelect }: DashboardO
 
           <Card className="shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Evaluated</CardTitle>
+              <CardTitle className="text-sm font-medium">Stopped</CardTitle>
               <CheckCircle className="h-4 w-4 text-success" />
             </CardHeader>
             <CardContent>
@@ -127,7 +96,7 @@ export const DashboardOverview = ({ coordinatorEmail, onToolSelect }: DashboardO
 
           <Card className="shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Ongoing</CardTitle>
+              <CardTitle className="text-sm font-medium">Active</CardTitle>
               <Clock className="h-4 w-4 text-warning" />
             </CardHeader>
             <CardContent>
@@ -150,24 +119,7 @@ export const DashboardOverview = ({ coordinatorEmail, onToolSelect }: DashboardO
       )}
 
       {/* Tool Search Component */}
-      {!loading && !error && (
-        <ToolSearch onToolSelect={onToolSelect} />
-      )}
-
-      {/* Debug Section */}
-      {/* {!loading && !error && (
-        <Card className="shadow-[var(--shadow-card)]">
-          <CardHeader>
-            <CardTitle>Debug: Raw Data</CardTitle>
-            <CardDescription>Raw data fetched for the dashboard</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <pre className="text-sm text-muted-foreground bg-muted p-4 rounded-lg overflow-auto">
-              {JSON.stringify(debugData, null, 2)}
-            </pre>
-          </CardContent>
-        </Card>
-      )} */}
+      {!loading && !error && <ToolSearch onToolSelect={onToolSelect} />}
     </div>
   );
 };

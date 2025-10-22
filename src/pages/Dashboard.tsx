@@ -8,6 +8,8 @@ import { useData } from "@/context/DataContext";
 import { Loader } from "@/components/Loader";
 import { CoordinatorFeedback } from "@/components/CoordinatorFeedback ";
 import UserGuide from "@/components/UserGuide";
+import CoordinatorManagement from "@/components/admin/CoordinatorManagement"
+
 
 const DashboardContent = () => {
   const [currentView, setCurrentView] = useState("overview");
@@ -24,6 +26,8 @@ const DashboardContent = () => {
         );
       case "tool-details":
         return <ToolDetails toolId={selectedToolId} />;
+      case "coordinator-management":
+         return isAdmin ? <CoordinatorManagement /> : null;
       case "feedback":
         return <CoordinatorFeedback />;
       case "user-guide":

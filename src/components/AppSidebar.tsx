@@ -43,6 +43,14 @@ const menuItems = [
   },
 ];
 
+const adminOnlyItems = [
+  {
+    id: "coordinator-management",
+    title: "Coordinator Management",
+    icon: Shield,
+  },
+];
+
 export function AppSidebar({ currentView, onViewChange, isAdmin }: AppSidebarProps) {
   const navigate = useNavigate();
 
@@ -54,10 +62,21 @@ export function AppSidebar({ currentView, onViewChange, isAdmin }: AppSidebarPro
 
   return (
     <Sidebar className="border-r border-border bg-card/50 backdrop-blur-sm">
+      {/* Header */}
       <SidebarHeader className="border-b border-border p-6">
         <div className="flex items-center gap-3">
-          <div className={`w-8 h-8 ${isAdmin ? 'bg-gradient-to-br from-forest to-primary' : 'bg-gradient-to-br from-forest to-primary'} rounded-lg flex items-center justify-center`}>
-            {isAdmin ? <Shield className="w-4 h-4 text-primary-foreground" /> : <BarChart3 className="w-4 h-4 text-primary-foreground" />}
+          <div
+            className={`w-8 h-8 ${
+              isAdmin
+                ? "bg-gradient-to-br from-forest to-primary"
+                : "bg-gradient-to-br from-forest to-primary"
+            } rounded-lg flex items-center justify-center`}
+          >
+            {isAdmin ? (
+              <Shield className="w-4 h-4 text-primary-foreground" />
+            ) : (
+              <BarChart3 className="w-4 h-4 text-primary-foreground" />
+            )}
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -75,12 +94,44 @@ export function AppSidebar({ currentView, onViewChange, isAdmin }: AppSidebarPro
         </div>
       </SidebarHeader>
 
+      {/* Navigation */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {menuItems.slice(0, 2).map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    onClick={() => onViewChange(item.id)}
+                    isActive={currentView === item.id}
+                    className="w-full justify-start"
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">{item.title}</span>
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+
+              {/* Admin-only items in the middle */}
+              {isAdmin && adminOnlyItems.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    onClick={() => onViewChange(item.id)}
+                    isActive={currentView === item.id}
+                    className="w-full justify-start"
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">{item.title}</span>
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+
+              {menuItems.slice(2).map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     onClick={() => onViewChange(item.id)}
@@ -98,6 +149,7 @@ export function AppSidebar({ currentView, onViewChange, isAdmin }: AppSidebarPro
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Logout */}
         <div className="mt-auto p-4">
           <Button onClick={handleLogout} variant="outline" className="w-full justify-start gap-2">
             <LogOut className="w-4 h-4" />
