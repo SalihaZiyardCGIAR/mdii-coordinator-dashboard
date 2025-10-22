@@ -30,11 +30,10 @@ const Index = () => {
             Multidimensional Digital Inclusiveness Index
           </h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Comprehensive dashboard for CGIAR coordinators to assess, monitor, and enhance the social inclusiveness of digital innovations in agriculture across key dimensions like Infrastructure Accessibility, Long-term Loss, Collaborative Innovation, and more for equitable impact in food, land, and water systems.
-          </p>
+Dashboard for MDII admins and coordinators to assess, monitor, and enhance the social inclusiveness of digital innovations in agriculture across key dimensions such as Infrastructure Accessibility, Long-term Loss, Collaborative Innovation, and more, ensuring equitable impact across food, land, and water systems.          </p>
           <Link to="/login">
             <Button size="lg" className="bg-gradient-to-r from-forest to-primary hover:from-forest/90 hover:to-primary/90 gap-2">
-              Login to Coordinator Panel
+              Login to our Panels
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
