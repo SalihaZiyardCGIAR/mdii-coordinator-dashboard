@@ -49,6 +49,11 @@ const adminOnlyItems = [
     title: "Coordinator Management",
     icon: Shield,
   },
+  {
+    id: "domain-expert-management",
+    title: "Domain Expert Management",
+    icon: Shield,
+  },
 ];
 
 export function AppSidebar({ currentView, onViewChange, isAdmin }: AppSidebarProps) {

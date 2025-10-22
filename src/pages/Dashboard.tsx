@@ -9,6 +9,7 @@ import { Loader } from "@/components/Loader";
 import { CoordinatorFeedback } from "@/components/CoordinatorFeedback ";
 import UserGuide from "@/components/UserGuide";
 import CoordinatorManagement from "@/components/admin/CoordinatorManagement"
+import DomainExpertManagement from "@/components/admin/DomainExpertManagement";
 
 
 const DashboardContent = () => {
@@ -28,6 +29,8 @@ const DashboardContent = () => {
         return <ToolDetails toolId={selectedToolId} />;
       case "coordinator-management":
          return isAdmin ? <CoordinatorManagement /> : null;
+      case "domain-expert-management":
+         return isAdmin ? <DomainExpertManagement /> : null;
       case "feedback":
         return <CoordinatorFeedback />;
       case "user-guide":
