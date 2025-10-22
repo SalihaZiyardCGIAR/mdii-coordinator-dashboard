@@ -21,17 +21,18 @@ interface EvalSubs {
 interface Tool {
   id: string;
   name: string;
-  status: string;
+  status: "active" | "stopped";
   ut3Submissions: number;
   ut4Submissions: number;
   coordinator: string;
   maturityLevel: "advanced" | "early" | null;
+  dateSubmitted?: string;
 }
 
 interface Activity {
   id: string;
   tool: string;
-  status: string;
+  status: "active" | "stopped";
   date: string;
   coordinator: string;
 }
@@ -48,14 +49,17 @@ interface DataContextType {
   stats: Stats;
   recentActivity: Activity[];
   tools: Tool[];
+  allTools: Tool[];
   coordinatorEmail: string;
+  isAdmin: boolean;
   setData: (data: {
     mainSubs: Submission[];
     changeSubs: Submission[];
     evalSubs: EvalSubs;
     coordinatorEmail: string;
+    isAdmin?: boolean;
   }) => void;
-  setTools: (tools: Tool[] | ((prev: Tool[]) => Tool[])) => void; // Added setTools to the interface
+  setTools: (tools: Tool[] | ((prev: Tool[]) => Tool[])) => void;
   fetchData: () => Promise<void>;
   loading: boolean;
   error: string | null;
@@ -73,14 +77,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
   const [tools, setTools] = useState<Tool[]>([]);
+  const [allTools, setAllTools] = useState<Tool[]>([]);
   const [coordinatorEmail, setCoordinatorEmail] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const email = localStorage.getItem("coordinatorEmail");
+    const adminStatus = localStorage.getItem("isAdmin") === "true";
     if (email) {
       setCoordinatorEmail(email);
+      setIsAdmin(adminStatus);
       setLoading(false);
     } else {
       setLoading(false);
@@ -126,7 +134,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Process the fetched data
-      setData({ mainSubs, changeSubs, evalSubs, coordinatorEmail });
+      setData({ mainSubs, changeSubs, evalSubs, coordinatorEmail, isAdmin });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch data");
       console.error("Data fetch error:", err);
@@ -139,7 +147,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     mainSubs: Submission[],
     changeSubs: Submission[],
     evalSubs: EvalSubs,
-    email: string
+    email: string,
+    isAdminUser: boolean = false
   ) => {
     try {
       // Sort change submissions by submission time
@@ -169,11 +178,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Calculate total tools
       const totalTools = mainSubs.length;
 
-      // Calculate appointed tools for the current coordinator
-      const appointedToolsCount = Object.entries(currentCoord).filter(
-        ([_, coordEmail]) => coordEmail === email
-      ).length;
-
       // Helper to extract tool_id from evaluation submissions
       const getToolId = (sub: Submission): string => {
         return String(
@@ -192,18 +196,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const early4 = new Set(evalSubs.early4.map(getToolId));
 
       // Process tools for stats and recent activity
-      let evaluated = 0;
-      let ongoing = 0;
-      const toolMap: { [key: string]: Submission } = {};
-      const toolStatus: { [key: string]: string } = {};
+      const toolStatus: { [key: string]: "active" | "stopped" } = {};
       const lastTimes: { [key: string]: Date } = {};
+      const toolMap: { [key: string]: Submission } = {};
+
       mainSubs.forEach((sub) => {
         const toolId = sub[KOBO_CONFIG.TOOL_ID_FIELD];
         toolMap[toolId] = sub;
         lastTimes[toolId] = appointmentTimes[toolId] || new Date(sub._submission_time);
-
-        const coord = currentCoord[toolId];
-        if (!coord || coord !== email) return; // Only process tools for this coordinator
 
         const maturity = sub[KOBO_CONFIG.MATURITY_FIELD];
         let has3 = false;
@@ -224,18 +224,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ...evalSubs.early3.filter((s) => getToolId(s) === toolId),
             ...evalSubs.early4.filter((s) => getToolId(s) === toolId),
           ];
-        } else {
-          return; // Skip unknown maturity
         }
 
-        let status = "pending";
-        if (has3 && has4) {
-          status = "completed";
-          evaluated++;
-        } else if (has3 || has4) {
-          status = "ongoing";
-          ongoing++;
-        }
+        const status = has3 && has4 ? "stopped" : "active";
         toolStatus[toolId] = status;
 
         // Update last time with evaluation times if available
@@ -248,27 +239,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
 
-      // Calculate completion rate
-      const completionRate = appointedToolsCount > 0 ? Math.round((evaluated / appointedToolsCount) * 100) : 0;
-
-      // Recent activity: last 3 tools appointed to this coordinator
-      const appointedIds = Object.entries(currentCoord)
-        .filter(([_, coordEmail]) => coordEmail === email)
-        .map(([id]) => id);
-      let activities: Activity[] = appointedIds.map((id) => ({
-        id,
-        tool: toolMap[id]?.[KOBO_CONFIG.TOOL_NAME_FIELD] || "Unknown Tool",
-        status: toolStatus[id] || "pending",
-        date: (appointmentTimes[id] || lastTimes[id]).toLocaleDateString("en-CA"),
-        coordinator: currentCoord[id],
-      }));
-      activities.sort((a, b) =>
-        (appointmentTimes[b.id] || lastTimes[b.id]).getTime() -
-        (appointmentTimes[a.id] || lastTimes[a.id]).getTime()
-      );
-      const recent = activities.slice(0, 3);
-
-      // Process tools for ToolSearch
+      // Calculate submission counts for all tools
       const submissionCounts: { [key: string]: { ut3: number; ut4: number } } = {};
       mainSubs.forEach((sub: any) => {
         const toolId = sub[KOBO_CONFIG.TOOL_ID_FIELD];
@@ -287,49 +258,166 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         submissionCounts[toolId] = { ut3: ut3Subs, ut4: ut4Subs };
       });
 
-      const appointedTools = mainSubs
-        .filter((sub: any) => currentCoord[sub[KOBO_CONFIG.TOOL_ID_FIELD]] === email)
-        .map((sub: any) => {
-          const toolId = sub[KOBO_CONFIG.TOOL_ID_FIELD];
-          return {
-            id: toolId,
-            name: sub[KOBO_CONFIG.TOOL_NAME_FIELD] || "Unknown Tool",
-            status: toolStatus[toolId] || "active",
-            ut3Submissions: submissionCounts[toolId]?.ut3 || 0,
-            ut4Submissions: submissionCounts[toolId]?.ut4 || 0,
-            coordinator: currentCoord[toolId],
-            maturityLevel: maturityLevels[toolId],
-          };
+      // Create all tools array (for admin view)
+      const allToolsArray = mainSubs.map((sub: any) => {
+        const toolId = sub[KOBO_CONFIG.TOOL_ID_FIELD];
+        const submissionDate = appointmentTimes[toolId] || new Date(sub._submission_time);
+        return {
+          id: toolId,
+          name: sub[KOBO_CONFIG.TOOL_NAME_FIELD] || "Unknown Tool",
+          status: toolStatus[toolId] || "active",
+          ut3Submissions: submissionCounts[toolId]?.ut3 || 0,
+          ut4Submissions: submissionCounts[toolId]?.ut4 || 0,
+          coordinator: currentCoord[toolId] || "Unassigned",
+          maturityLevel: maturityLevels[toolId],
+          dateSubmitted: submissionDate.toLocaleDateString("en-CA"),
+        };
+      });
+
+      setAllTools(allToolsArray);
+
+      // Process based on user type
+      if (isAdminUser) {
+        // Admin stats
+        const totalCoordinators = new Set(Object.values(currentCoord)).size;
+        let stoppedCount = 0;
+        let activeCount = 0;
+
+        Object.keys(toolStatus).forEach((toolId) => {
+          if (toolStatus[toolId] === "stopped") stoppedCount++;
+          if (toolStatus[toolId] === "active") activeCount++;
         });
 
-      setStats({ totalTools, appointedTools: appointedToolsCount, evaluatedTools: evaluated, ongoingTools: ongoing, completionRate });
-      setRecentActivity(recent);
-      setTools(appointedTools);
-      setCoordinatorEmail(email);
-      setLoading(false);
+        const overallCompletion = mainSubs.length > 0 ? Math.round((stoppedCount / mainSubs.length) * 100) : 0;
+
+        setStats({
+          totalTools: mainSubs.length,
+          appointedTools: totalCoordinators,
+          evaluatedTools: stoppedCount,
+          ongoingTools: activeCount,
+          completionRate: overallCompletion,
+        });
+
+        // Admin recent activity: last 3 tool updates
+        let allActivities: Activity[] = Object.keys(toolMap).map((id) => ({
+          id,
+          tool: toolMap[id]?.[KOBO_CONFIG.TOOL_NAME_FIELD] || "Unknown Tool",
+          status: toolStatus[id] || "active",
+          date: (lastTimes[id] || new Date()).toLocaleDateString("en-CA"),
+          coordinator: currentCoord[id] || "Unassigned",
+        }));
+        allActivities.sort((a, b) =>
+          (lastTimes[b.id] || new Date()).getTime() - (lastTimes[a.id] || new Date()).getTime()
+        );
+        setRecentActivity(allActivities.slice(0, 3));
+        setTools(allToolsArray);
+      } else {
+        // Coordinator specific stats
+        const appointedToolsCount = Object.entries(currentCoord).filter(
+          ([_, coordEmail]) => coordEmail === email
+        ).length;
+
+        let stoppedCount = 0;
+        let activeCount = 0;
+
+        Object.entries(currentCoord).forEach(([toolId, coordEmail]) => {
+          if (coordEmail === email) {
+            if (toolStatus[toolId] === "stopped") stoppedCount++;
+            if (toolStatus[toolId] === "active") activeCount++;
+          }
+        });
+
+        const completionRate = appointedToolsCount > 0 ? Math.round((stoppedCount / appointedToolsCount) * 100) : 0;
+
+        setStats({
+          totalTools,
+          appointedTools: appointedToolsCount,
+          evaluatedTools: stoppedCount,
+          ongoingTools: activeCount,
+          completionRate,
+        });
+
+        // Coordinator recent activity
+        const appointedIds = Object.entries(currentCoord)
+          .filter(([_, coordEmail]) => coordEmail === email)
+          .map(([id]) => id);
+
+        let activities: Activity[] = appointedIds.map((id) => ({
+          id,
+          tool: toolMap[id]?.[KOBO_CONFIG.TOOL_NAME_FIELD] || "Unknown Tool",
+          status: toolStatus[id] || "active",
+          date: (appointmentTimes[id] || lastTimes[id]).toLocaleDateString("en-CA"),
+          coordinator: currentCoord[id],
+        }));
+
+        activities.sort((a, b) =>
+          (appointmentTimes[b.id] || lastTimes[b.id]).getTime() -
+          (appointmentTimes[a.id] || lastTimes[a.id]).getTime()
+        );
+        setRecentActivity(activities.slice(0, 3));
+
+        // Coordinator tools - Filter by coordinator email from currentCoord
+        const appointedTools = Object.entries(currentCoord)
+          .filter(([_, coordEmail]) => coordEmail === email)
+          .map(([toolId]) => {
+            const sub = toolMap[toolId];
+            const submissionDate = appointmentTimes[toolId] || new Date(sub._submission_time);
+            return {
+              id: toolId,
+              name: sub?.[KOBO_CONFIG.TOOL_NAME_FIELD] || "Unknown Tool",
+              status: toolStatus[toolId] || "active",
+              ut3Submissions: submissionCounts[toolId]?.ut3 || 0,
+              ut4Submissions: submissionCounts[toolId]?.ut4 || 0,
+              coordinator: currentCoord[toolId] || "Unassigned",
+              maturityLevel: maturityLevels[toolId],
+              dateSubmitted: submissionDate.toLocaleDateString("en-CA"),
+            };
+          });
+
+        setTools(appointedTools);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to process data");
-      setLoading(false);
+      console.error("Data processing error:", err);
     }
   };
 
-  const setData = (data: {
+  const setData = ({
+    mainSubs,
+    changeSubs,
+    evalSubs,
+    coordinatorEmail: email,
+    isAdmin: adminStatus = false,
+  }: {
     mainSubs: Submission[];
     changeSubs: Submission[];
     evalSubs: EvalSubs;
     coordinatorEmail: string;
+    isAdmin?: boolean;
   }) => {
-    setLoading(true);
-    processData(data.mainSubs, data.changeSubs, data.evalSubs, data.coordinatorEmail);
+    setCoordinatorEmail(email);
+    setIsAdmin(adminStatus);
+    localStorage.setItem("coordinatorEmail", email);
+    localStorage.setItem("isAdmin", adminStatus.toString());
+    processData(mainSubs, changeSubs, evalSubs, email, adminStatus);
   };
 
-  return (
-    <DataContext.Provider value={{ stats, recentActivity, tools, coordinatorEmail, setData, setTools, fetchData, loading, error }}>
-      {children}
-    </DataContext.Provider>
-  );
-};
+  const value: DataContextType = {
+    stats,
+    recentActivity,
+    tools,
+    allTools,
+    coordinatorEmail,
+    isAdmin,
+    setData,
+    setTools,
+    fetchData,
+    loading,
+    error,
+  };
 
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+};
 export const useData = () => {
   const context = useContext(DataContext);
   if (!context) {
