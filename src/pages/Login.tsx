@@ -2,13 +2,14 @@ import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { KOBO_CONFIG } from "@/config/koboConfig";
 import { getApiUrl } from "@/config/apiConfig";
 import { DataContext } from "@/context/DataContext";
 import { Scale } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader } from "@/components/Loader";
 
 const ADMIN_EMAIL = "mdii@cgiar.org";
 
@@ -41,10 +42,8 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Check if admin login
       const isAdmin = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-      // Validate login mode matches email
       if (activeTab === "admin" && !isAdmin) {
         toast({
           title: "Access Denied",
@@ -65,7 +64,6 @@ const Login = () => {
         return;
       }
 
-      // Fetch main form submissions
       const mainRes = await fetch(getApiUrl(`assets/${KOBO_CONFIG.MAIN_FORM_ID}/data.json`, "mainForm"));
       if (!mainRes.ok) {
         throw new Error(`Failed to fetch main form: ${mainRes.status} ${mainRes.statusText}`);
@@ -73,7 +71,6 @@ const Login = () => {
       const mainData = await mainRes.json();
       const mainSubs = mainData.results || [];
 
-      // Fetch change coordinator submissions
       const changeRes = await fetch(getApiUrl(`assets/${KOBO_CONFIG.change_coordinator}/data.json`, "changeCoordinator"));
       if (!changeRes.ok) {
         throw new Error(`Failed to fetch change form: ${changeRes.status} ${changeRes.statusText}`);
@@ -81,13 +78,7 @@ const Login = () => {
       const changeData = await changeRes.json();
       const changeSubs = changeData.results || [];
 
-      // Fetch evaluation forms
-      const evalSubs = {
-        advanced3: [],
-        early3: [],
-        advanced4: [],
-        early4: [],
-      };
+      const evalSubs = { advanced3: [], early3: [], advanced4: [], early4: [] };
       const formMap = {
         advanced3: { id: KOBO_CONFIG.USERTYPE3_FORMS.advance_stage, label: "advanced3" },
         early3: { id: KOBO_CONFIG.USERTYPE3_FORMS.early_stage, label: "early3" },
@@ -103,14 +94,11 @@ const Login = () => {
         evalSubs[key as keyof typeof evalSubs] = data.results || [];
       }
 
-      // Sort changes by submission time ascending
       changeSubs.sort((a, b) => 
         new Date(a._submission_time).getTime() - new Date(b._submission_time).getTime()
       );
 
-      // For non-admin, validate coordinator access
       if (!isAdmin) {
-        // Build current coordinators map
         const currentCoord: Record<string, string> = {};
         mainSubs.forEach((sub: any) => {
           if (sub.coordinator_email) {
@@ -125,7 +113,6 @@ const Login = () => {
           }
         });
 
-        // Check if email is a coordinator
         const coordinators = new Set(Object.values(currentCoord));
         if (!coordinators.has(email)) {
           toast({
@@ -137,7 +124,6 @@ const Login = () => {
         }
       }
 
-      // Store email, admin status, and data in context
       localStorage.setItem("coordinatorEmail", email);
       localStorage.setItem("isAdmin", isAdmin.toString());
       setData({ mainSubs, changeSubs, evalSubs, coordinatorEmail: email, isAdmin });
@@ -169,7 +155,7 @@ const Login = () => {
           <div>
             <CardTitle className="text-2xl font-bold text-foreground">MDII Portal</CardTitle>
             <CardDescription className="text-muted-foreground">
-              CGIAR Research Tools Dashboard
+              Centralized dashboard to manage, monitor, and explore MDII tools.
             </CardDescription>
           </div>
         </CardHeader>
@@ -197,10 +183,17 @@ const Login = () => {
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-forest to-primary hover:from-forest/90 hover:to-primary/90 text-primary-foreground"
+                  className="w-full bg-gradient-to-r from-forest to-primary hover:from-forest/90 hover:to-primary/90 text-primary-foreground relative"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Logging in..." : "Access Dashboard"}
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2 w-full h-full absolute top-0 left-0">
+                      <Loader variant="white" size={20} color="white" />
+                      <span className="text-white">Logging in...</span>
+                    </div>
+                  ) : (
+                    "Coordinator Dashboard"
+                  )}
                 </Button>
               </form>
             </TabsContent>
@@ -222,10 +215,17 @@ const Login = () => {
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-forest to-primary hover:from-forest/90 hover:to-primary/90 text-primary-foreground"
+                  className="w-full bg-gradient-to-r from-forest to-primary hover:from-forest/90 hover:to-primary/90 text-primary-foreground relative"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Logging in..." : "Admin Login"}
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2 w-full h-full absolute top-0 left-0">
+                      <Loader variant="white" size={20} color="white" />
+                      <span className="text-white">Logging in...</span>
+                    </div>
+                  ) : (
+                    "Admin Dashboard"
+                  )}
                 </Button>
               </form>
             </TabsContent>
