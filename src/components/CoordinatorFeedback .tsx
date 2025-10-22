@@ -219,8 +219,7 @@ export const CoordinatorFeedback = () => {
         <div className="lg:col-span-2">
           <Card className="shadow-[var(--shadow-card)]">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
+              <CardTitle >
                 Submit Feedback
               </CardTitle>
               <CardDescription>

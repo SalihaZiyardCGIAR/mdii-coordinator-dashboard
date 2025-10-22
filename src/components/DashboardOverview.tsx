@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Clock, Users, Target } from "lucide-react";
+import { CheckCircle, Clock, Users, Target, Shield } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { Loader } from "./Loader";
 import { ToolSearch } from "./ToolSearch";
@@ -42,13 +42,14 @@ export const DashboardOverview = ({ coordinatorEmail, onToolSelect }: DashboardO
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-forest to-primary rounded-full flex items-center justify-center shadow-lg">
+            <Shield className="w-6 h-6 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Coordinator Dashboard</h1>
           <p className="text-muted-foreground">Welcome back, {coordinatorEmail || "Unknown User"}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm text-muted-foreground">Last updated</p>
-          <p className="text-sm font-medium">{new Date().toLocaleDateString()}</p>
+          </div>
         </div>
       </div>
 
