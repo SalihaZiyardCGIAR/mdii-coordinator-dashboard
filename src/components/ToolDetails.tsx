@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, FileText, Calendar, User, MapPin, Loader2, CheckCircle, XCircle, AlertCircle, StopCircle } from "lucide-react";
+import { Search, FileText, Calendar, User, MapPin, Loader2, CheckCircle, XCircle, AlertCircle, StopCircle, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -241,41 +241,53 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
         </div>
 
         {toolData && (
-          <>
-            <div className="bg-white border rounded-lg p-6 mb-6">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <h2 className="text-lg font-medium mb-2">{toolData.toolName}</h2>
-                  <div className="flex gap-2">
-                    <span className="text-sm text-gray-600">Tool ID: {toolData.toolId}</span>
-                    <span className="text-sm text-gray-400">•</span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                      {toolData.maturity.charAt(0).toUpperCase() + toolData.maturity.slice(1)}
-                    </span>
-                    <span className="text-sm text-gray-400">•</span>
-                    <Badge className={toolData.status === "active" ? "bg-success/20 text-success border-success/30" : ""} variant={toolData.status === "stopped" ? "secondary" : "default"}>
-                      {toolData.status === "active" ? "Active" : "Stopped"}
-                    </Badge>
-                  </div>
+        <>
+          <div className="bg-white border rounded-lg p-6 mb-6">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex-1">
+                <h2 className="text-lg font-medium mb-2">{toolData.toolName}</h2>
+                <div className="flex gap-2">
+                  <span className="text-sm text-gray-600">Tool ID: {toolData.toolId}</span>
+                  <span className="text-sm text-gray-400">•</span>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                    {toolData.maturity.charAt(0).toUpperCase() + toolData.maturity.slice(1)}
+                  </span>
+                  <span className="text-sm text-gray-400">•</span>
+                  <Badge className={toolData.status === "active" ? "bg-success/20 text-success border-success/30" : ""} variant={toolData.status === "stopped" ? "secondary" : "default"}>
+                    {toolData.status === "active" ? "Active" : "Stopped"}
+                  </Badge>
                 </div>
-                {toolData.status === "active" && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleStopTool}
-                    disabled={stoppingTool}
-                    className="gap-2"
-                  >
-                    {stoppingTool ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <StopCircle className="h-4 w-4" />
-                    )}
-                    Stop Tool
-                  </Button>
-                )}
               </div>
+              {toolData.status === "active" ? (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleStopTool}
+                  disabled={stoppingTool}
+                  className="gap-2"
+                >
+                  {stoppingTool ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <StopCircle className="h-4 w-4" />
+                  )}
+                  Stop Tool
+                </Button>
+              ) : (
+                <Button asChild variant="default" size="sm" className="gap-2">
+                  <a
+                    href={`https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${toolData.toolId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Report
+                  </a>
+                </Button>
+              )}
             </div>
+          </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <div className="bg-white border rounded-lg">
