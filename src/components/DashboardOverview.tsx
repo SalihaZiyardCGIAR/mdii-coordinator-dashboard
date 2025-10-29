@@ -83,7 +83,7 @@ export const DashboardOverview = ({ coordinatorEmail, onToolSelect }: DashboardO
 
           <Card className="shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Stopped</CardTitle>
+              <CardTitle className="text-sm font-medium">Completed Evaluations</CardTitle>
               <CheckCircle className="h-4 w-4 text-success" />
             </CardHeader>
             <CardContent>
@@ -94,7 +94,7 @@ export const DashboardOverview = ({ coordinatorEmail, onToolSelect }: DashboardO
 
           <Card className="shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active</CardTitle>
+              <CardTitle className="text-sm font-medium">Active Evaluations</CardTitle>
               <Clock className="h-4 w-4 text-warning" />
             </CardHeader>
             <CardContent>
@@ -105,7 +105,7 @@ export const DashboardOverview = ({ coordinatorEmail, onToolSelect }: DashboardO
 
           <Card className="shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completion</CardTitle>
+              <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
               <Target className="h-4 w-4 text-forest" />
             </CardHeader>
             <CardContent>

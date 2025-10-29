@@ -98,6 +98,10 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
   const handleStopTool = () => {
     setIsStopDialogOpen(true);
   };
+  const maturityMap = {
+  advance_stage: "Advanced stage",
+  early_stage: "Early stage",
+};
 
   const handleConfirmStop = async () => {
     if (!toolData) return;
@@ -191,7 +195,7 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
   const getStatusIcon = (submitted: boolean) => {
     return submitted ?
       <CheckCircle className="h-4 w-4 text-green-600" /> :
-      <XCircle className="h-4 w-4 text-gray-400" />;
+      <XCircle className="h-4 w-4 text-red-400" />;
   };
 
   const handleAssignDomainExperts = () => {
@@ -250,7 +254,7 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
                   <span className="text-sm text-gray-600">Tool ID: {toolData.toolId}</span>
                   <span className="text-sm text-gray-400">•</span>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                    {toolData.maturity.charAt(0).toUpperCase() + toolData.maturity.slice(1)}
+                    Maturity: {maturityMap[toolData.maturity] || "N/A"}
                   </span>
                   <span className="text-sm text-gray-400">•</span>
                   <Badge className={toolData.status === "active" ? "bg-success/20 text-success border-success/30" : ""} variant={toolData.status === "stopped" ? "secondary" : "default"}>
@@ -271,7 +275,7 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
                   ) : (
                     <StopCircle className="h-4 w-4" />
                   )}
-                  Stop Tool
+                  Terminate Data Collection
                 </Button>
               ) : (
                 <Button asChild variant="default" size="sm" className="gap-2">

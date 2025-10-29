@@ -205,7 +205,10 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
     setToolDetails(null);
     setDetailsError(null);
   };
-
+const maturityMap = {
+  advance_stage: "Advanced stage",
+  early_stage: "Early stage",
+};
   return (
     <div className="space-y-4 relative">
       {loadingDetails && (
@@ -223,11 +226,11 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
 
       <Card className="shadow-[var(--shadow-card)]">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Search className="w-4 h-4" />
+          <CardTitle className="flex items-center gap-2 text-lg ml-2">
+            {/* <Search className="w-4 h-4" /> */}
             Search Tools
           </CardTitle>
-          <CardDescription className="text-sm">Find specific tools by name, coordinator, or tool ID</CardDescription>
+          {/* <CardDescription className="text-sm">Find specific tools by name, coordinator, or tool ID</CardDescription> */}
         </CardHeader>
         <CardContent className="pt-0">
           <div className="relative">
@@ -263,8 +266,8 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
       {!loading && !error && (
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="active">Active Tools ({activeTools.length})</TabsTrigger>
-            <TabsTrigger value="stopped">Stopped Tools ({stoppedTools.length})</TabsTrigger>
+            <TabsTrigger value="active">Active Evaluations ({activeTools.length})</TabsTrigger>
+            <TabsTrigger value="stopped">Completed Evaluations ({stoppedTools.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="active" className="space-y-3 mt-4">
@@ -289,9 +292,9 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
                             {getStatusBadge(tool.status)}
                           </div>
                         </div>
-                        <CardDescription className="text-sm">
-                          Maturity: {tool.maturityLevel || "N/A"}
-                        </CardDescription>
+                          <CardDescription className="text-sm">
+                            Maturity: {maturityMap[tool.maturityLevel] || "N/A"}
+                          </CardDescription>
                       </CardHeader>
                     </Card>
                   ))}
