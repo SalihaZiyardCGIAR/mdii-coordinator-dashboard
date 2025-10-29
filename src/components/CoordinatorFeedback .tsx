@@ -222,9 +222,9 @@ export const CoordinatorFeedback = () => {
               <CardTitle >
                 Submit Feedback
               </CardTitle>
-              <CardDescription>
+              {/* <CardDescription>
                 Your input helps us improve the MDII Portal. All feedback is reviewed by our team.
-              </CardDescription>
+              </CardDescription> */}
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
