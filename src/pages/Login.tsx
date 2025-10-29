@@ -149,13 +149,17 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-forest-light via-background to-earth-blue-light p-4">
       <Card className="w-full max-w-md shadow-[var(--shadow-elevated)]">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-forest to-primary rounded-full flex items-center justify-center">
-            <Scale className="w-8 h-8 text-primary-foreground" />
+          <div className="mx-auto w-[200px] h-[150px] flex items-center justify-center">
+            <img
+              src="/mdii_logo.svg"
+              alt="MDII Logo"
+              className="w-[180px] h-[120px] object-contain"
+            />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-foreground">MDII Portal</CardTitle>
             <CardDescription className="text-muted-foreground">
-              Centralized dashboard to manage, monitor, and explore MDII tools.
+              Welcome to your dedicated portal. Login to Continue.
             </CardDescription>
           </div>
         </CardHeader>

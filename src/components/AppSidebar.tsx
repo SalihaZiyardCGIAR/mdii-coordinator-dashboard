@@ -1,4 +1,4 @@
-import { BarChart3, Search, LogOut, MessageSquare, BookOpen, Shield } from "lucide-react";
+import { BarChart3, Search, LogOut, MessageSquare, BookOpen, Shield, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -28,7 +28,7 @@ const menuItems = [
   },
   {
     id: "tool-details",
-    title: "Tool Details",
+    title: "Evaluation Details",
     icon: Search,
   },
   {
@@ -78,9 +78,9 @@ export function AppSidebar({ currentView, onViewChange, isAdmin }: AppSidebarPro
             } rounded-lg flex items-center justify-center`}
           >
             {isAdmin ? (
-              <Shield className="w-4 h-4 text-primary-foreground" />
+              <User  className="w-4 h-4 text-primary-foreground" />
             ) : (
-              <BarChart3 className="w-4 h-4 text-primary-foreground" />
+              <User className="w-4 h-4 text-primary-foreground" />
             )}
           </div>
           <div>
