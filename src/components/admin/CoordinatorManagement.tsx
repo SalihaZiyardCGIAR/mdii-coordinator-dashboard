@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { KOBO_CONFIG } from "@/config/koboConfig";
 import { getApiUrl } from "@/config/apiConfig";
+import { getAllStoppedTools } from "@/utils/blobStorage";
 
 interface Coordinator {
   email: string;
@@ -31,7 +32,7 @@ export default function CoordinatorManagement() {
   const fetchCoordinators = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch main form
       const mainRes = await fetch(getApiUrl(`assets/${KOBO_CONFIG.MAIN_FORM_ID}/data.json`, "mainForm"));
       if (!mainRes.ok) throw new Error("Failed to fetch main form");
@@ -144,6 +145,17 @@ export default function CoordinatorManagement() {
         }
       });
 
+      // **NEW: Get stopped tools from Azure Blob Storage**
+      const stoppedToolsFromBlob = await getAllStoppedTools(); // you must have this function implemented
+      const stoppedToolIds = new Set(stoppedToolsFromBlob.map(t => t.toolId));
+
+      // Update tool status based on blob storage
+      Object.keys(toolInfo).forEach((toolId) => {
+        if (stoppedToolIds.has(toolId)) {
+          toolInfo[toolId].status = "stopped";
+        }
+      });
+
       // Process coordinators
       const coordinatorMap = new Map<string, Coordinator>();
 
@@ -179,6 +191,7 @@ export default function CoordinatorManagement() {
       setLoading(false);
     }
   };
+
 
   const extractNameFromEmail = (email: string): string => {
     const namePart = email.split('@')[0];
@@ -228,8 +241,8 @@ export default function CoordinatorManagement() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Coordinator Management</h1>
-        <p className="text-muted-foreground text-sm">View and contact research coordinators</p>
+        <h1 className="text-3xl font-bold text-foreground">Coordinator Management</h1>
+        <p className="text-gray-600">View and contact research coordinators</p>
       </div>
 
       <Card className="shadow-[var(--shadow-card)]">

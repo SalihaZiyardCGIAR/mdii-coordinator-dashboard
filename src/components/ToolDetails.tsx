@@ -12,6 +12,7 @@ import { Loader } from "@/components/Loader";
 import { useToast } from "@/hooks/use-toast";
 import DataTable from "./DataTable";
 import { fetchToolDetails, ToolDetailsData } from "@/context/toolUtils";
+import {  getToolStatus, updateToolStatusOnStop } from "@/utils/blobStorage";
 
 interface ToolDetailsProps {
   toolId?: string | null;
@@ -82,7 +83,33 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
       setCheckingAssignment(false);
 
       const data = await fetchToolDetails(toolId, tools);
-      setToolData(data);
+const savedStatus = await getToolStatus(toolId);
+
+// Check if tool is truly completed based on CSV columns
+if (savedStatus) {
+  const isActuallyCompleted = 
+    savedStatus['Status'] === 'Completed' &&
+    savedStatus['Current Step'] === 'Report Sent' &&
+    (savedStatus['Report Sent'] === 'Checkmark' || savedStatus['Report Sent'] === '✓') &&
+    savedStatus['Survey Closed Time for Downstream Beneficiries'] &&
+    savedStatus['Survey Closed Time for Direct Users'];
+    
+
+  // Only mark as stopped if ALL conditions are met
+  data.status = isActuallyCompleted ? 'stopped' : 'active';
+  
+  console.log('Tool status check:', {
+    toolId,
+    csvStatus: savedStatus['Status'],
+    currentStep: savedStatus['Current Step'],
+    reportSent: savedStatus['Report Sent'],
+    surveyClosedDownstream: savedStatus['Survey Closed Time for Downstream Beneficiries'],
+    surveyClosedDirectUsers: savedStatus['Survey Closed Time for Direct Users'],
+    finalStatus: data.status
+  });
+}
+
+setToolData(data);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -98,99 +125,109 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
   const handleStopTool = () => {
     setIsStopDialogOpen(true);
   };
-  const maturityMap = {
-  advance_stage: "Advanced stage",
-  early_stage: "Early stage",
-};
 
-  const handleConfirmStop = async () => {
-    if (!toolData) return;
+const handleConfirmStop = async () => {
+  if (!toolData) return;
 
-    setStoppingTool(true);
-    const currentDateTime = new Date();
-    const formattedDateTime = currentDateTime.toLocaleString();
-    const isoDateTime = currentDateTime.toISOString();
+  setStoppingTool(true);
+  const currentDateTime = new Date();
+  const formattedDateTime = currentDateTime.toLocaleString('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+  const isoDateTime = currentDateTime.toISOString();
 
-    try {
-      const calculationMethod = toolData.maturity === "advance_stage" ? "MDII Regular Version" : "MDII Exante Version";
-      const csvApiUrl = `${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/score_kobo_tool?code=${import.meta.env.VITE_AZURE_FUNCTION_KEY}&tool_id=${toolData.toolId}&calculation_method=${encodeURIComponent(calculationMethod)}&column_names=column_names`;
-      const img = new Image();
-      img.src = csvApiUrl;
+  try {
+    const calculationMethod = toolData.maturity === "advance_stage" ? "MDII Regular Version" : "MDII Exante Version";
+    const csvApiUrl = `${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/score_kobo_tool?code=${import.meta.env.VITE_AZURE_FUNCTION_KEY}&tool_id=${toolData.toolId}&calculation_method=${encodeURIComponent(calculationMethod)}&column_names=column_names`;
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    const img = new Image();
+    img.src = csvApiUrl;
 
-      const apiUrl = `/api/score-tool?tool_id=${toolData.toolId}`;
-      const response = await fetch(apiUrl);
+    // Wait longer for Azure Function to complete CSV generation
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
-      if (!response.ok) throw new Error(`Failed to trigger tool stop: ${response.statusText}`);
+    // **Update the CSV with the new columns**
+    await updateToolStatusOnStop(toolData.toolId, formattedDateTime);
 
-      setTools((prev) =>
-        prev.map((tool) => (tool.id === toolData.toolId ? { ...tool, status: "stopped" } : tool))
-      );
 
-      setToolData((prev) => prev ? { ...prev, status: "stopped" } : null);
+    const apiUrl = `/api/score-tool?tool_id=${toolData.toolId}`;
+    const response = await fetch(apiUrl);
 
-      toast({
-        title: "Tool Stopped",
-        description: `${toolData.toolName} submissions stopped at ${formattedDateTime}. Email will be sent shortly.`,
-      });
+    if (!response.ok) throw new Error(`Failed to trigger tool stop: ${response.statusText}`);
 
-      setTimeout(async () => {
-        try {
-          const flowUrl = "https://default6afa0e00fa1440b78a2e22a7f8c357.d5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/080a15cb2b9b4387ac23f1a7978a8bbb/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XlWqhTpqNuxZJkvKeCoWziBX5Vhgtix8zdUq0IF8Npw";
+    setTools((prev) =>
+      prev.map((tool) => (tool.id === toolData.toolId ? { ...tool, status: "stopped" } : tool))
+    );
 
-          const pdfReportLink = `https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${toolData.toolId}`;
+    setToolData((prev) => prev ? { ...prev, status: "stopped" } : null);
 
-          const payload = {
-            tool_id: toolData.toolId,
-            tool_name: toolData.toolName,
-            tool_maturity: toolData.maturity || "unknown",
-            stopped_at: formattedDateTime,
-            stopped_at_iso: isoDateTime,
-            timestamp: currentDateTime.getTime(),
-            pdf_report_link: pdfReportLink,
-          };
+    toast({
+      title: "Tool Stopped",
+      description: `${toolData.toolName} submissions stopped at ${formattedDateTime}. Email will be sent shortly.`,
+    });
 
-          const flowResponse = await fetch(flowUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-          });
+    setTimeout(async () => {
+      try {
+        const flowUrl = "https://default6afa0e00fa1440b78a2e22a7f8c357.d5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/080a15cb2b9b4387ac23f1a7978a8bbb/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XlWqhTpqNuxZJkvKeCoWziBX5Vhgtix8zdUq0IF8Npw";
 
-          if (!flowResponse.ok) {
-            throw new Error(`Failed to trigger email flow: ${flowResponse.statusText}`);
-          }
+        const pdfReportLink = `https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${toolData.toolId}`;
 
-          toast({
-            title: "Email Triggered",
-            description: `Email for tool ${toolData.toolId} has been sent with Score report link attached.`,
-          });
-        } catch (flowErr: any) {
-          console.error("Error triggering Power Automate:", flowErr);
-          toast({
-            title: "Error",
-            description: `Failed to trigger email: ${flowErr.message}`,
-            variant: "destructive",
-          });
+        const payload = {
+          tool_id: toolData.toolId,
+          tool_name: toolData.toolName,
+          tool_maturity: toolData.maturity || "unknown",
+          stopped_at: formattedDateTime,
+          stopped_at_iso: isoDateTime,
+          timestamp: currentDateTime.getTime(),
+          pdf_report_link: pdfReportLink,
+        };
+
+        const flowResponse = await fetch(flowUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!flowResponse.ok) {
+          throw new Error(`Failed to trigger email flow: ${flowResponse.statusText}`);
         }
-      }, 6000);
 
-      setIsStopDialogOpen(false);
-    } catch (err: any) {
-      console.error("Error stopping tool:", err);
-      toast({
-        title: "Error",
-        description: err.message.includes("Failed to fetch") || err.message.includes("CORS")
-          ? "Unable to connect to the server. Please try again later or contact support."
-          : `Failed to stop tool: ${err.message}`,
-        variant: "destructive",
-      });
-    } finally {
-      setStoppingTool(false);
-    }
-  };
+        toast({
+          title: "Email Triggered",
+          description: `Email for tool ${toolData.toolId} has been sent with Score report link attached.`,
+        });
+      } catch (flowErr: any) {
+        console.error("Error triggering Power Automate:", flowErr);
+        toast({
+          title: "Error",
+          description: `Failed to trigger email: ${flowErr.message}`,
+          variant: "destructive",
+        });
+      }
+    }, 6000);
+
+    setIsStopDialogOpen(false);
+  } catch (err: any) {
+    console.error("Error stopping tool:", err);
+    toast({
+      title: "Error",
+      description: err.message.includes("Failed to fetch") || err.message.includes("CORS")
+        ? "Unable to connect to the server. Please try again later or contact support."
+        : `Failed to stop tool: ${err.message}`,
+      variant: "destructive",
+    });
+  } finally {
+    setStoppingTool(false);
+  }
+};
 
   const getStatusIcon = (submitted: boolean) => {
     return submitted ?
@@ -206,6 +243,10 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
     window.open(formUrl, '_blank');
   };
 
+  const maturityMap = {
+  advance_stage: "Advanced stage",
+  early_stage: "Early stage",
+};
   return (
     <div className="min-h-screen">
       <div className="max-w-[1550px] mx-auto">
