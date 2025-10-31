@@ -1,4 +1,4 @@
-import { BarChart3, Search, LogOut, MessageSquare, BookOpen, Shield, User } from "lucide-react";
+import { BarChart3, Search, LogOut, MessageSquare, BookOpen, Shield, Calendar, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -54,6 +54,11 @@ const adminOnlyItems = [
     title: "Domain Expert Management",
     icon: Shield,
   },
+  {
+    id: "calendar",
+    title: "Admin Calendar",
+    icon: Calendar,
+  },
 ];
 
 export function AppSidebar({ currentView, onViewChange, isAdmin }: AppSidebarProps) {
@@ -78,7 +83,7 @@ export function AppSidebar({ currentView, onViewChange, isAdmin }: AppSidebarPro
             } rounded-lg flex items-center justify-center`}
           >
             {isAdmin ? (
-              <User  className="w-4 h-4 text-primary-foreground" />
+              <User className="w-4 h-4 text-primary-foreground" />
             ) : (
               <User className="w-4 h-4 text-primary-foreground" />
             )}
@@ -121,20 +126,21 @@ export function AppSidebar({ currentView, onViewChange, isAdmin }: AppSidebarPro
               ))}
 
               {/* Admin-only items in the middle */}
-              {isAdmin && adminOnlyItems.map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    onClick={() => onViewChange(item.id)}
-                    isActive={currentView === item.id}
-                    className="w-full justify-start"
-                  >
-                    <item.icon className="w-4 h-4" />
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">{item.title}</span>
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {isAdmin &&
+                adminOnlyItems.map((item) => (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      onClick={() => onViewChange(item.id)}
+                      isActive={currentView === item.id}
+                      className="w-full justify-start"
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">{item.title}</span>
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
 
               {menuItems.slice(2).map((item) => (
                 <SidebarMenuItem key={item.id}>

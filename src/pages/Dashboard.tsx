@@ -10,6 +10,7 @@ import { CoordinatorFeedback } from "@/components/CoordinatorFeedback ";
 import UserGuide from "@/components/UserGuide";
 import CoordinatorManagement from "@/components/admin/CoordinatorManagement"
 import DomainExpertManagement from "@/components/admin/DomainExpertManagement";
+import { AdminCalendar } from "@/components/admin/AdminCalendar";
 
 
 const DashboardContent = () => {
@@ -28,9 +29,11 @@ const DashboardContent = () => {
       case "tool-details":
         return <ToolDetails toolId={selectedToolId} />;
       case "coordinator-management":
-         return isAdmin ? <CoordinatorManagement /> : null;
+        return isAdmin ? <CoordinatorManagement /> : null;
       case "domain-expert-management":
-         return isAdmin ? <DomainExpertManagement /> : null;
+        return isAdmin ? <DomainExpertManagement /> : null;
+      case "calendar":
+        return isAdmin ? <AdminCalendar /> : null;
       case "feedback":
         return <CoordinatorFeedback />;
       case "user-guide":
@@ -68,15 +71,7 @@ const DashboardContent = () => {
     <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-forest-light/30 to-earth-blue-light/30">
       <AppSidebar currentView={currentView} onViewChange={setCurrentView} isAdmin={isAdmin} />
       <main className="flex-1 p-6">
-        {currentView === "overview" ? (
-          isAdmin ? (
-            <AdminDashboardOverview onToolSelect={handleToolSelect} />
-          ) : (
-            <DashboardOverview coordinatorEmail={coordinatorEmail} onToolSelect={handleToolSelect} />
-          )
-        ) : (
-          renderContent()
-        )}
+        {renderContent()}
       </main>
     </div>
   );
