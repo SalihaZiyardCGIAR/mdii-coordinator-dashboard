@@ -250,9 +250,6 @@ export const AdminDashboardOverview = ({ onToolSelect }: AdminDashboardOverviewP
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-forest to-primary rounded-full flex items-center justify-center shadow-lg">
-            <Shield className="w-6 h-6 text-primary-foreground" />
-          </div>
           <div>
             <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
             <p className="text-muted-foreground">Full system overview and management</p>

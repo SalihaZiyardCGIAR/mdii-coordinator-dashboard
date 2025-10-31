@@ -252,7 +252,7 @@ const handleConfirmStop = async () => {
       <div className="max-w-[1550px] mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">
-            Tool Details
+            Evaluation Details
           </h1>
           <p className="text-gray-600">View detailed submissions for your assigned tools</p>
         </div>
