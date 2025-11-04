@@ -451,7 +451,7 @@ export default function DomainExpertManagement() {
                             <td className="py-3 px-8">
                               <div className="flex flex-wrap gap-1.5">
                                 {expert.domains.map((domain, idx) => (
-                                  <Badge key={idx} variant="secondary" className="text-xs px-2 py-0.5">
+                                  <Badge key={idx} variant="teal" className="text-xs px-2 py-0.5">
                                     {domain}
                                   </Badge>
                                 ))}
