@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Clock, Target, Users, Shield, ChevronLeft, ChevronRight, ExternalLink, Download, StopCircle } from "lucide-react";
+import { CheckCircle, Clock, Target, Users, Shield, ChevronLeft, ChevronRight, ExternalLink, Download, StopCircle, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useData } from "@/context/DataContext";
 import { Loader } from "../Loader";
@@ -27,6 +27,7 @@ export const AdminDashboardOverview = ({ onToolSelect }: AdminDashboardOverviewP
   const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [stoppingToolId, setStoppingToolId] = useState<string | null>(null);
   const itemsPerPage = 10;
+const [sortOrder, setSortOrder] = useState<"asc" | "desc" | "none">("none");
 
   // Filter by date
   const getFilteredByDate = (tools: typeof allTools) => {
@@ -78,15 +79,26 @@ export const AdminDashboardOverview = ({ onToolSelect }: AdminDashboardOverviewP
     });
   };
 
-  // Filter by search term, date, and coordinator
-  const filteredTools = getFilteredByCoordinator(
-    getFilteredByDate(allTools)
-  ).filter(
-    (tool) =>
-      tool.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tool.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tool.coordinator.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+// Filter by search term, date, and coordinator + SORT by coordinator
+let sortedAndFilteredTools = getFilteredByCoordinator(
+  getFilteredByDate(allTools)
+).filter(
+  (tool) =>
+    tool.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    tool.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    tool.coordinator.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+// Apply sorting by coordinator
+if (sortOrder !== "none") {
+  sortedAndFilteredTools.sort((a, b) => {
+    const coordA = (a.coordinator || "").toLowerCase();
+    const coordB = (b.coordinator || "").toLowerCase();
+    return sortOrder === "asc" ? coordA.localeCompare(coordB) : coordB.localeCompare(coordA);
+  });
+}
+
+const filteredTools = sortedAndFilteredTools;
 
   // Pagination
   const totalPages = Math.ceil(filteredTools.length / itemsPerPage);
@@ -252,7 +264,7 @@ export const AdminDashboardOverview = ({ onToolSelect }: AdminDashboardOverviewP
         <div className="flex items-center gap-3">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Full system overview and management</p>
+            <p className="text-muted-foreground">Welcome back! You look nice today to work on digital inclusiveness 😎</p>
           </div>
         </div>
         <div className="text-right">
@@ -276,18 +288,18 @@ export const AdminDashboardOverview = ({ onToolSelect }: AdminDashboardOverviewP
 
         <Card className="shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Coordinators</CardTitle>
-            <Users className="h-4 w-4 text-earth-blue" />
+            <CardTitle className="text-sm font-medium">Active Evaluations</CardTitle>
+            <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{totalCoordinators}</div>
-            <p className="text-xs text-muted-foreground">Active coordinators</p>
+            <div className="text-2xl font-bold text-foreground">{activeTools}</div>
+            <p className="text-xs text-muted-foreground">In progress</p>
           </CardContent>
         </Card>
 
         <Card className="shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Stopped</CardTitle>
+            <CardTitle className="text-sm font-medium">Completed Evaluations</CardTitle>
             <CheckCircle className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
@@ -298,12 +310,12 @@ export const AdminDashboardOverview = ({ onToolSelect }: AdminDashboardOverviewP
 
         <Card className="shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-            <Clock className="h-4 w-4 text-warning" />
+            <CardTitle className="text-sm font-medium">Coordinators</CardTitle>
+            <Users className="h-4 w-4 text-earth-blue" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{activeTools}</div>
-            <p className="text-xs text-muted-foreground">In progress</p>
+            <div className="text-2xl font-bold text-foreground">{totalCoordinators}</div>
+            <p className="text-xs text-muted-foreground">Active coordinators</p>
           </CardContent>
         </Card>
 
@@ -391,8 +403,25 @@ export const AdminDashboardOverview = ({ onToolSelect }: AdminDashboardOverviewP
                 <tr className="border-b border-border">
                   <th className="text-left p-3 font-semibold text-sm">Tool ID</th>
                   <th className="text-left p-3 font-semibold text-sm">Tool Name</th>
-                  <th className="text-left p-3 font-semibold text-sm">Coordinator</th>
-                  <th className="text-left p-3 font-semibold text-sm">Date Submitted</th>
+                  <th
+                      className="text-left p-3 font-semibold text-sm cursor-pointer select-none hover:bg-muted/50 transition-colors"
+                      onClick={() => {
+                        if (sortOrder === "none" || sortOrder === "desc") {
+                          setSortOrder("asc");
+                        } else {
+                          setSortOrder("desc");
+                        }
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <div className="flex items-center gap-1">
+                        Coordinator
+                        {sortOrder === "asc" && <ChevronUp className="w-4 h-4" />}
+                        {sortOrder === "desc" && <ChevronDown className="w-4 h-4" />}
+                        {sortOrder === "none" && <ChevronsUpDown className="w-4 h-4 opacity-40" />}
+                      </div>
+                    </th>
+                  <th className="text-left p-3 font-semibold text-sm">Submitted Date</th>
                   <th className="text-left p-3 font-semibold text-sm">Maturity</th>
                   <th className="text-left p-3 font-semibold text-sm">Status</th>
                   <th className="text-center p-3 font-semibold text-sm">Actions</th>

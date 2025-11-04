@@ -93,11 +93,11 @@ export function AppSidebar({ currentView, onViewChange, isAdmin }: AppSidebarPro
               <h2 className="font-semibold text-foreground">
                 {isAdmin ? "Admin Portal" : "Coordinator Portal"}
               </h2>
-              {isAdmin && (
+              {/* {isAdmin && (
                 <Badge variant="default" className="text-xs">
                   Admin
                 </Badge>
-              )}
+              )} */}
             </div>
             <p className="text-xs text-muted-foreground">MDII Tools</p>
           </div>
