@@ -50,8 +50,8 @@ const getAzureBlobUrl = (blobName: string) => {
   return `https://${AZURE_STORAGE_ACCOUNT}.blob.core.windows.net/${import.meta.env.VITE_AZURE_CALENDAR_CONTAINER}/${blobName}?${sasToken}`
 }
 
-const AZURE_BLOB_URL = getAzureBlobUrl(import.meta.env.VITE_AZURE_CALENDAR_BLOB_NAME)
-const AZURE_NOTES_URL = getAzureBlobUrl(import.meta.env.VITE_AZURE_TOOL_NOTES_BLOB_NAME)
+const AZURE_BLOB_URL = getAzureBlobUrl(import.meta.env.VITE_AZURE_CALENDAR_BLOB_NAME || "calendar-tasks.csv")
+const AZURE_NOTES_URL = getAzureBlobUrl("tool-notes.csv")
 
 export  function AdminCalendar() {
   const { tools } = useData()
