@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardOverview } from "@/components/DashboardOverview";
-import { AdminDashboardOverview } from "@/components/admin/AdminDashboardOverview ";
+import { AdminDashboardOverview } from "@/components/admin/dashboard/AdminDashboardOverview";
 import { ToolDetails } from "@/components/ToolDetails";
 import { useData } from "@/context/DataContext";
 import { Loader } from "@/components/Loader";
