@@ -10,7 +10,7 @@ import { CoordinatorFeedback } from "@/components/CoordinatorFeedback ";
 import UserGuide from "@/components/UserGuide";
 import CoordinatorManagement from "@/components/admin/CoordinatorManagement"
 import DomainExpertManagement from "@/components/admin/DomainExpertManagement";
-import { AdminCalendar } from "@/components/admin/AdminCalendar";
+import { AdminCalendar } from "@/components/admin/calender/AdminCalendar";
 
 
 const DashboardContent = () => {
