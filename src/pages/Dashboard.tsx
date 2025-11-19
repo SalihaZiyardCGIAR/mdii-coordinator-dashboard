@@ -7,7 +7,7 @@ import { ToolDetails } from "@/components/ToolDetails";
 import { useData } from "@/context/DataContext";
 import { Loader } from "@/components/Loader";
 import { CoordinatorFeedback } from "@/components/CoordinatorFeedback ";
-import UserGuide from "@/components/UserGuide";
+import UserGuide from "@/components/common/userguide/UserGuide";
 import CoordinatorManagement from "@/components/admin/CoordinatorManagement"
 import DomainExpertManagement from "@/components/admin/DomainExpertManagement";
 import { AdminCalendar } from "@/components/admin/calender/AdminCalendar";
