@@ -12,10 +12,8 @@ import { getApiUrl } from "@/config/apiConfig";
 interface DomainExpert {
   name: string;
   organization: string;
-  email: string;
   domains: string[];
   toolIds: string[];
-  maturityType: string;
 }
 
 export default function DomainExpertManagement() {
@@ -26,7 +24,6 @@ export default function DomainExpertManagement() {
   const [selectedExpert, setSelectedExpert] = useState<DomainExpert | null>(null);
   
   // Filter states
-  const [selectedMaturity, setSelectedMaturity] = useState<string | "all">("all");
   const [selectedOrganizations, setSelectedOrganizations] = useState<Set<string>>(new Set());
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
@@ -38,13 +35,12 @@ export default function DomainExpertManagement() {
   const uniqueOrganizations = Array.from(new Set(domainExperts.map(expert => expert.organization)));
   const uniqueDomains = Array.from(new Set(domainExperts.flatMap(expert => expert.domains)));
 
-const domainColorPalette = [
-  {
-    bg: "hsl(var(--secondary))",
-    text: "hsl(var(--secondary-foreground))",
-  },
-];
-
+  const domainColorPalette = [
+    {
+      bg: "hsl(var(--secondary))",
+      text: "hsl(var(--secondary-foreground))",
+    },
+  ];
 
   const getDomainBadgeStyle = (domain: string) => {
     const hash = domain.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -94,7 +90,6 @@ const domainColorPalette = [
       domainExpertSubs.advancedDomain.forEach((sub: any) => {
         const name = sub["group_intro_001/Q_22100000"] || "Unknown";
         const organization = sub["group_intro_001/Q_22200000"] || "Unknown";
-        const email = sub["group_intro_001/Q_22400000"] || "N/A";
         const domainsStr = sub["group_intro_001/Q_22300000"];
         const toolId = sub["group_intro_001/Q_13110000"] || sub["group_intro/Q_13110000"];
 
@@ -105,10 +100,8 @@ const domainColorPalette = [
             expertMap.set(key, {
               name,
               organization,
-              email,
               domains: [],
               toolIds: [],
-              maturityType: "Advanced Stage",
             });
           }
 
@@ -134,7 +127,6 @@ const domainColorPalette = [
       domainExpertSubs.earlyDomain.forEach((sub: any) => {
         const name = sub["group_individualinfo/Q_22100000"] || "Unknown";
         const organization = sub["group_individualinfo/Q_22200000"] || "Unknown";
-        const email = sub["group_individualinfo/Q_22400000"] || "N/A";
         const domainsStr = sub["group_individualinfo/Q_22300000"];
         const toolId = sub["group_toolid/Q_13110000"] || sub["group_intro/Q_13110000"];
 
@@ -145,20 +137,12 @@ const domainColorPalette = [
             expertMap.set(key, {
               name,
               organization,
-              email,
               domains: [],
               toolIds: [],
-              maturityType: "Early Stage",
             });
           }
 
           const expert = expertMap.get(key)!;
-
-          if (expert.maturityType === "Advanced Stage") {
-            expert.maturityType = "Both";
-          } else if (expert.maturityType !== "Both") {
-            expert.maturityType = "Early Stage";
-          }
 
           if (toolId && !expert.toolIds.includes(toolId)) {
             expert.toolIds.push(toolId);
@@ -190,46 +174,24 @@ const domainColorPalette = [
     const matchesSearch =
       expert.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       expert.organization.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      expert.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       expert.domains.some((domain) => domain.toLowerCase().includes(searchQuery.toLowerCase())) ||
       expert.toolIds.some((toolId) => toolId.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    const matchesMaturity = selectedMaturity === "all" || expert.maturityType === selectedMaturity;
     const matchesOrganization = selectedOrganizations.size === 0 || selectedOrganizations.has(expert.organization);
     const matchesDomain = selectedDomains.size === 0 || expert.domains.some(domain => selectedDomains.has(domain));
 
-    return matchesSearch && matchesMaturity && matchesOrganization && matchesDomain;
+    return matchesSearch && matchesOrganization && matchesDomain;
   });
 
   const totalPages = Math.ceil(filteredExperts.length / expertsPerPage);
   const startIndex = (currentPage - 1) * expertsPerPage;
   const paginatedExperts = filteredExperts.slice(startIndex, startIndex + expertsPerPage);
 
-  const activeFilterCount = 
-    (selectedMaturity !== "all" ? 1 : 0) +
-    selectedOrganizations.size +
-    selectedDomains.size;
+  const activeFilterCount = selectedOrganizations.size + selectedDomains.size;
 
   const clearAllFilters = () => {
-    setSelectedMaturity("all");
     setSelectedOrganizations(new Set());
     setSelectedDomains(new Set());
-  };
-
-  const getMaturityClassName = (maturityType: string) => {
-    switch (maturityType) {
-      case "Both":
-        return "inline-flex items-center px-3 py-1 rounded text-xs font-semibold text-primary-dark-blue border border-border"
-         ;
-      case "Advanced Stage":
-        return "inline-flex items-center px-3 py-1 rounded text-xs font-semibold text-primary-dark-blue border border-border"
-          ;
-      case "Early Stage":
-        return "inline-flex items-center px-3 py-1 rounded text-xs font-semibold text-primary-dark-blue border border-border"
-          ;
-      default:
-        return "";
-    }
   };
 
   return (
@@ -249,7 +211,7 @@ const domainColorPalette = [
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   type="text"
-                  placeholder="Search by name, organization, email, domain, or tool ID..."
+                  placeholder="Search by name, organization, domain, or tool ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -270,26 +232,9 @@ const domainColorPalette = [
               </Button>
             </div>
 
-
             {/* Expandable Filter Panel */}
             {showFilters && (
-              <div className="border-t pt-4 mt-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Maturity Filter */}
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Maturity Level</label>
-                  <Select value={selectedMaturity} onValueChange={setSelectedMaturity}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All Maturity Levels" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Maturity Levels</SelectItem>
-                      <SelectItem value="Early Stage">Early Stage</SelectItem>
-                      <SelectItem value="Advanced Stage">Advanced Stage</SelectItem>
-                      <SelectItem value="Both">Both Stages</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
+              <div className="border-t pt-4 mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Organization Filter */}
                 <div className="relative">
                   <label className="text-sm font-medium mb-2 block">Organizations</label>
@@ -393,13 +338,9 @@ const domainColorPalette = [
                       <thead className="bg-[#f5f5f5] border-b border-[#e9e9e9]">
                         <tr>
                           <th className="text-left py-3 px-4 text-sm font-semibold text-[#28537D]">Name</th>
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-[#28537D]">Email</th>
                           <th className="text-left py-3 px-4 text-sm font-semibold text-[#28537D]">Organization</th>
                           <th className="text-left py-3 px-8 text-sm font-semibold text-[#28537D]">
                             Domains of Expertise
-                          </th>
-                          <th className="text-center py-3 px-4 text-sm font-semibold text-[#28537D]">
-                            Maturity
                           </th>
                           <th className="text-center py-3 px-4 text-sm font-semibold text-[#28537D]">
                             Tools Reviewed
@@ -418,9 +359,6 @@ const domainColorPalette = [
                               <div className="flex items-center gap-2">
                                 <span className="font-medium text-sm text-foreground">{expert.name}</span>
                               </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className="text-sm text-[#556B7D]">{expert.email}</span>
                             </td>
                             <td className="py-3 px-4">
                               <span className="text-sm text-[#556B7D]">{expert.organization}</span>
@@ -443,13 +381,6 @@ const domainColorPalette = [
                                   );
                                 })}
                               </div>
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <span
-                                className={`text-xs font-semibold px-3 py-1 rounded inline-block ${getMaturityClassName(expert.maturityType)}`}
-                              >
-                                {expert.maturityType}
-                              </span>
                             </td>
                             <td className="py-3 px-4 text-center">
                               <span
