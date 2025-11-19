@@ -11,8 +11,8 @@ const Index = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-forest to-primary rounded-lg flex items-center justify-center">
-                <Earth  className="w-6 h-6 text-primary-foreground" />
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                <Earth  className="w-6 h-6 text-primary-foreground " />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-foreground">MDII Tool Portal</h1>
@@ -44,7 +44,7 @@ const Index = () => {
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           <Card className="shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
             <CardHeader className="text-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-forest to-primary rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center mx-auto mb-4">
                 <BarChart3 className="w-6 h-6 text-primary-foreground" />
               </div>
               <CardTitle>Evaluation Panel Overview</CardTitle>
@@ -68,7 +68,7 @@ const Index = () => {
 
           <Card className="shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow">
             <CardHeader className="text-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-success to-warning rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center mx-auto mb-4">
                 <SearchIcon className="w-6 h-6 text-primary-foreground" />
               </div>
               <CardTitle>Assigned Tools</CardTitle>

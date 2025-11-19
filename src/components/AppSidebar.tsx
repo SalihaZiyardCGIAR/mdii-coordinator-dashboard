@@ -78,9 +78,9 @@ export function AppSidebar({ currentView, onViewChange, isAdmin }: AppSidebarPro
           <div
             className={`w-8 h-8 ${
               isAdmin
-                ? "bg-gradient-to-br from-forest to-primary"
-                : "bg-gradient-to-br from-forest to-primary"
-            } rounded-lg flex items-center justify-center`}
+                ? "bg-primary"
+                : "bg-primary"
+            } rounded-lg flex items-center justify-center `}
           >
             {isAdmin ? (
               <User className="w-4 h-4 text-primary-foreground" />
