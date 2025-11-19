@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Loader2, Award, Filter, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Loader2, Award, Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { getApiUrl } from "@/config/apiConfig";
 interface DomainExpert {
   name: string;
   organization: string;
+  email: string;
   domains: string[];
   toolIds: string[];
   maturityType: string;
@@ -32,10 +33,24 @@ export default function DomainExpertManagement() {
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
   const [showDomainDropdown, setShowDomainDropdown] = useState(false);
 
-  const expertsPerPage = 10;
+  const expertsPerPage = 15;
 
   const uniqueOrganizations = Array.from(new Set(domainExperts.map(expert => expert.organization)));
   const uniqueDomains = Array.from(new Set(domainExperts.flatMap(expert => expert.domains)));
+
+const domainColorPalette = [
+  {
+    bg: "hsl(var(--secondary))",
+    text: "hsl(var(--secondary-foreground))",
+  },
+];
+
+
+  const getDomainBadgeStyle = (domain: string) => {
+    const hash = domain.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colorIndex = hash % domainColorPalette.length;
+    return domainColorPalette[colorIndex];
+  };
 
   useEffect(() => {
     fetchDomainExperts();
@@ -79,6 +94,7 @@ export default function DomainExpertManagement() {
       domainExpertSubs.advancedDomain.forEach((sub: any) => {
         const name = sub["group_intro_001/Q_22100000"] || "Unknown";
         const organization = sub["group_intro_001/Q_22200000"] || "Unknown";
+        const email = sub["group_intro_001/Q_22400000"] || "N/A";
         const domainsStr = sub["group_intro_001/Q_22300000"];
         const toolId = sub["group_intro_001/Q_13110000"] || sub["group_intro/Q_13110000"];
 
@@ -89,6 +105,7 @@ export default function DomainExpertManagement() {
             expertMap.set(key, {
               name,
               organization,
+              email,
               domains: [],
               toolIds: [],
               maturityType: "Advanced Stage",
@@ -117,6 +134,7 @@ export default function DomainExpertManagement() {
       domainExpertSubs.earlyDomain.forEach((sub: any) => {
         const name = sub["group_individualinfo/Q_22100000"] || "Unknown";
         const organization = sub["group_individualinfo/Q_22200000"] || "Unknown";
+        const email = sub["group_individualinfo/Q_22400000"] || "N/A";
         const domainsStr = sub["group_individualinfo/Q_22300000"];
         const toolId = sub["group_toolid/Q_13110000"] || sub["group_intro/Q_13110000"];
 
@@ -127,6 +145,7 @@ export default function DomainExpertManagement() {
             expertMap.set(key, {
               name,
               organization,
+              email,
               domains: [],
               toolIds: [],
               maturityType: "Early Stage",
@@ -171,6 +190,7 @@ export default function DomainExpertManagement() {
     const matchesSearch =
       expert.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       expert.organization.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      expert.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       expert.domains.some((domain) => domain.toLowerCase().includes(searchQuery.toLowerCase())) ||
       expert.toolIds.some((toolId) => toolId.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -199,11 +219,14 @@ export default function DomainExpertManagement() {
   const getMaturityClassName = (maturityType: string) => {
     switch (maturityType) {
       case "Both":
-        return "inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800";
+        return "inline-flex items-center px-3 py-1 rounded text-xs font-semibold text-primary-dark-blue border border-border"
+         ;
       case "Advanced Stage":
-        return "inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800";
+        return "inline-flex items-center px-3 py-1 rounded text-xs font-semibold text-primary-dark-blue border border-border"
+          ;
       case "Early Stage":
-        return "inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800";
+        return "inline-flex items-center px-3 py-1 rounded text-xs font-semibold text-primary-dark-blue border border-border"
+          ;
       default:
         return "";
     }
@@ -226,7 +249,7 @@ export default function DomainExpertManagement() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   type="text"
-                  placeholder="Search by name, organization, domain, or tool ID..."
+                  placeholder="Search by name, organization, email, domain, or tool ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -247,55 +270,6 @@ export default function DomainExpertManagement() {
               </Button>
             </div>
 
-            {/* Active Filters Display */}
-            {activeFilterCount > 0 && (
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-sm text-muted-foreground">Active filters:</span>
-                {selectedMaturity !== "all" && (
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    {selectedMaturity}
-                    <X 
-                      className="w-3 h-3 cursor-pointer hover:text-destructive" 
-                      onClick={() => setSelectedMaturity("all")}
-                    />
-                  </Badge>
-                )}
-                {Array.from(selectedOrganizations).map(org => (
-                  <Badge key={org} variant="secondary" className="flex items-center gap-1">
-                    {org}
-                    <X 
-                      className="w-3 h-3 cursor-pointer hover:text-destructive" 
-                      onClick={() => {
-                        const newSet = new Set(selectedOrganizations);
-                        newSet.delete(org);
-                        setSelectedOrganizations(newSet);
-                      }}
-                    />
-                  </Badge>
-                ))}
-                {Array.from(selectedDomains).map(domain => (
-                  <Badge key={domain} variant="secondary" className="flex items-center gap-1">
-                    {domain}
-                    <X 
-                      className="w-3 h-3 cursor-pointer hover:text-destructive" 
-                      onClick={() => {
-                        const newSet = new Set(selectedDomains);
-                        newSet.delete(domain);
-                        setSelectedDomains(newSet);
-                      }}
-                    />
-                  </Badge>
-                ))}
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={clearAllFilters}
-                  className="h-7 text-xs"
-                >
-                  Clear all
-                </Button>
-              </div>
-            )}
 
             {/* Expandable Filter Panel */}
             {showFilters && (
@@ -416,17 +390,18 @@ export default function DomainExpertManagement() {
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead className="bg-muted/50 border-b">
+                      <thead className="bg-[#f5f5f5] border-b border-[#e9e9e9]">
                         <tr>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Name</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Organization</th>
-                          <th className="text-left py-3 px-8 text-sm font-medium text-muted-foreground">
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-[#28537D]">Name</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-[#28537D]">Email</th>
+                          <th className="text-left py-3 px-4 text-sm font-semibold text-[#28537D]">Organization</th>
+                          <th className="text-left py-3 px-8 text-sm font-semibold text-[#28537D]">
                             Domains of Expertise
                           </th>
-                          <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">
+                          <th className="text-center py-3 px-4 text-sm font-semibold text-[#28537D]">
                             Maturity
                           </th>
-                          <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">
+                          <th className="text-center py-3 px-4 text-sm font-semibold text-[#28537D]">
                             Tools Reviewed
                           </th>
                         </tr>
@@ -435,37 +410,50 @@ export default function DomainExpertManagement() {
                         {paginatedExperts.map((expert, index) => (
                           <tr
                             key={`${expert.name}-${expert.organization}`}
-                            className={`border-b hover:bg-muted/30 transition-colors ${
-                              index % 2 === 0 ? "bg-background" : "bg-muted/10"
+                            className={`border-b hover:bg-[#f9f9f9] transition-colors ${
+                              index % 2 === 0 ? "bg-white" : "bg-[#fafafa]"
                             }`}
                           >
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
-                                <span className="font-medium text-sm">{expert.name}</span>
+                                <span className="font-medium text-sm text-foreground">{expert.name}</span>
                               </div>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="text-sm text-muted-foreground">{expert.organization}</span>
+                              <span className="text-sm text-[#556B7D]">{expert.email}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-sm text-[#556B7D]">{expert.organization}</span>
                             </td>
                             <td className="py-3 px-8">
                               <div className="flex flex-wrap gap-1.5">
-                                {expert.domains.map((domain, idx) => (
-                                  <Badge key={idx} variant="teal" className="text-xs px-2 py-0.5">
-                                    {domain}
-                                  </Badge>
-                                ))}
+                                {expert.domains.map((domain, idx) => {
+                                  const { bg, text } = getDomainBadgeStyle(domain);
+                                  return (
+                                    <span
+                                      key={idx}
+                                      className="text-xs px-2.5 py-1 rounded font-medium transition-all"
+                                      style={{
+                                        backgroundColor: bg,
+                                        color: text,
+                                      }}
+                                    >
+                                      {domain}
+                                    </span>
+                                  );
+                                })}
                               </div>
                             </td>
-                              <td className="py-3 px-4 text-center">
-                                <Badge
-                                  className={`text-xs font-medium px-3 py-1 ${getMaturityClassName(expert.maturityType)}`}
-                                >
-                                  {expert.maturityType}
-                                </Badge>
-                              </td>
                             <td className="py-3 px-4 text-center">
                               <span
-                                className="text-sm font-bold text-blue-600 cursor-pointer underline hover:text-blue-700 transition-colors"
+                                className={`text-xs font-semibold px-3 py-1 rounded inline-block ${getMaturityClassName(expert.maturityType)}`}
+                              >
+                                {expert.maturityType}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span
+                                className="text-sm font-bold text-[#0297A6] cursor-pointer underline hover:text-[#028399] transition-colors"
                                 onClick={() => setSelectedExpert(expert)}
                               >
                                 {expert.toolIds.length}
@@ -520,34 +508,34 @@ export default function DomainExpertManagement() {
       )}
 
       {/* Modal for Tools Reviewed */}
-{selectedExpert && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setSelectedExpert(null)}>
-    <div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">Tools Reviewed by {selectedExpert.name}</h2>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setSelectedExpert(null)}
-          className="h-6 w-6 p-0 hover:bg-red-500/10 rounded-full"
-        >
-          <X className="h-4 w-4 text-red-500" />
-        </Button>
-      </div>
-      <ul className="list-disc pl-5 max-h-64 overflow-y-auto">
-        {selectedExpert.toolIds.length > 0 ? (
-          selectedExpert.toolIds.map((toolId) => (
-            <li key={toolId} className="text-sm text-foreground mb-1">
-              {toolId}
-            </li>
-          ))
-        ) : (
-          <li className="text-sm text-muted-foreground">No tools found.</li>
-        )}
-      </ul>
-    </div>
-  </div>
-)}
+      {selectedExpert && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setSelectedExpert(null)}>
+          <div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Tools Reviewed by {selectedExpert.name}</h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setSelectedExpert(null)}
+                className="h-6 w-6 p-0 hover:bg-red-500/10 rounded-full"
+              >
+                <X className="h-4 w-4 text-red-500" />
+              </Button>
+            </div>
+            <ul className="list-disc pl-5 max-h-64 overflow-y-auto">
+              {selectedExpert.toolIds.length > 0 ? (
+                selectedExpert.toolIds.map((toolId) => (
+                  <li key={toolId} className="text-sm text-foreground mb-1">
+                    {toolId}
+                  </li>
+                ))
+              ) : (
+                <li className="text-sm text-muted-foreground">No tools found.</li>
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

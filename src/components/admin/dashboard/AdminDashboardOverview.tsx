@@ -5,8 +5,8 @@ import { Loader } from "@/components/Loader";
 import { DashboardHeader} from "./components/DashboardHeader";
 import { StatsGrid } from "./components/StatsGrid";
 import { ToolsTable } from "./components/ToolsTable";
-import { useToolFilters } from "./hooks/useToolFilters";
-import useToolActions from "./hooks/useToolActions";
+import { useToolFilters } from "../../../hooks/useToolFilters";
+import useToolActions from "../../../hooks/useToolActions";
 
 interface AdminDashboardOverviewProps {
   onToolSelect?: (toolId: string) => void;
