@@ -298,7 +298,7 @@ const handleConfirmStop = async () => {
                     Maturity: {maturityMap[toolData.maturity] || "N/A"}
                   </span>
                   <span className="text-sm text-gray-400">•</span>
-                  <Badge className={toolData.status === "active" ? "bg-success/20 text-success border-success/30" : ""} variant={toolData.status === "stopped" ? "secondary" : "default"}>
+                  <Badge className={toolData.status === "active" ? "bg-success/20 text-[#2A4779] border-success/30" : ""} variant={toolData.status === "stopped" ? "secondary" : "default"}>
                     {toolData.status === "active" ? "Active" : "Stopped"}
                   </Badge>
                 </div>

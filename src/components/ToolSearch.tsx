@@ -5,13 +5,13 @@ import { Search, Loader2, CheckCircle, XCircle, StopCircle, Download } from "luc
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useData } from "@/context/DataContext";
 import { useToast } from "@/hooks/use-toast";
 import DataTable from "./DataTable";
 import { fetchToolDetails, ToolDetailsData } from "@/context/toolUtils";
+import {StatusBadge} from "./ui/StatusBadge";
 
 interface Tool {
   id: string;
@@ -175,17 +175,6 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "stopped":
-        return <Badge variant="secondary">Stopped</Badge>;
-      case "active":
-        return <Badge className="bg-success/20 text-success border-success/30">Active</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
   const getStatusIcon = (submitted: boolean) => {
     return submitted ? <CheckCircle className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-gray-400" />;
   };
@@ -205,10 +194,12 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
     setToolDetails(null);
     setDetailsError(null);
   };
-const maturityMap = {
-  advance_stage: "Advanced stage",
-  early_stage: "Early stage",
-};
+
+  const maturityMap = {
+    advance_stage: "Advanced stage",
+    early_stage: "Early stage",
+  };
+
   return (
     <div className="space-y-4 relative">
       {loadingDetails && (
@@ -227,10 +218,8 @@ const maturityMap = {
       <Card className="shadow-[var(--shadow-card)]">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg ml-2">
-            {/* <Search className="w-4 h-4" /> */}
             Search Tools
           </CardTitle>
-          {/* <CardDescription className="text-sm">Find specific tools by name, coordinator, or tool ID</CardDescription> */}
         </CardHeader>
         <CardContent className="pt-0">
           <div className="relative">
@@ -289,12 +278,12 @@ const maturityMap = {
                             <span className="text-sm text-muted-foreground font-mono">{tool.id}</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            {getStatusBadge(tool.status)}
+                            <StatusBadge status={tool.status} />
                           </div>
                         </div>
-                          <CardDescription className="text-sm">
-                            Maturity: {maturityMap[tool.maturityLevel] || "N/A"}
-                          </CardDescription>
+                        <CardDescription className="text-sm">
+                          Maturity: {maturityMap[tool.maturityLevel] || "N/A"}
+                        </CardDescription>
                       </CardHeader>
                     </Card>
                   ))}
@@ -344,7 +333,7 @@ const maturityMap = {
                             <span className="text-sm text-muted-foreground font-mono">{tool.id}</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            {getStatusBadge(tool.status)}
+                            <StatusBadge status={tool.status} />
                             <Button
                               asChild
                               variant="default"

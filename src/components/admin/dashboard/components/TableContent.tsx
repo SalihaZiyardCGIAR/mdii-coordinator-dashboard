@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ChevronUp, ChevronDown, ChevronsUpDown, Users, ExternalLink } from "lucide-react";
 
 interface TableContentProps {
@@ -81,7 +82,7 @@ export const TableContent = ({
                   {tool.maturityLevel || "N/A"}
                 </Badge>
               </td>
-              <td className="p-3">{getStatusBadge(tool.status)}</td>
+              <td><StatusBadge status={tool.status} /></td>
               <td className="p-3 text-center">
                 <Button
                   variant="link"
