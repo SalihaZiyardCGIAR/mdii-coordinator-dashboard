@@ -90,7 +90,7 @@ export const CalendarSidebar = ({
                 {activeTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="p-2 rounded border border-border bg-background hover:bg-accent transition-colors group"
+                    className="p-2 rounded border border-border bg-background hover:bg-sidebar-accent transition-colors group"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -142,7 +142,7 @@ export const CalendarSidebar = ({
         <div className="bg-card border border-border rounded-lg shadow-md">
           <button
             onClick={() => setShowCompletedTasks(!showCompletedTasks)}
-            className="w-full p-4 border-b border-border flex items-center justify-between hover:bg-accent transition-colors"
+            className="w-full p-4 border-b border-border flex items-center justify-between hover:bg-sidebar-accent transition-colors"
           >
             <div>
               <h3 className="font-semibold text-foreground">Completed</h3>
@@ -158,7 +158,7 @@ export const CalendarSidebar = ({
                 {completedTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="p-2 rounded border border-border bg-background hover:bg-accent transition-colors flex items-center gap-2"
+                    className="p-2 rounded border border-border bg-background hover:bg-sidebar-accent transition-colors flex items-center gap-2"
                   >
                     <Check className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <div className="flex-1 min-w-0">
