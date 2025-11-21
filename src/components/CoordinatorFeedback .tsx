@@ -19,7 +19,6 @@ export const CoordinatorFeedback = () => {
   const [feedback, setFeedback] = useState("");
   const [subject, setSubject] = useState("");
   const [category, setCategory] = useState("");
-  const [priority, setPriority] = useState("medium");
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [screenshotPreviews, setScreenshotPreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,12 +38,6 @@ export const CoordinatorFeedback = () => {
     { value: "other", label: "Other" },
   ];
 
-  const priorities = [
-    { value: "low", label: "Low Priority", color: "text-blue-600" },
-    { value: "medium", label: "Medium Priority", color: "text-yellow-600" },
-    { value: "high", label: "High Priority", color: "text-red-600" },
-  ];
-
   const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
@@ -57,10 +50,9 @@ export const CoordinatorFeedback = () => {
       return;
     }
 
-    // Validate file types and sizes
     const validFiles = files.filter(file => {
       const isImage = file.type.startsWith('image/');
-      const isUnder5MB = file.size <= 5 * 1024 * 1024; // 5MB limit
+      const isUnder5MB = file.size <= 5 * 1024 * 1024;
       
       if (!isImage) {
         toast({
@@ -85,10 +77,8 @@ export const CoordinatorFeedback = () => {
 
     if (validFiles.length === 0) return;
 
-    // Add new screenshots
     setScreenshots(prev => [...prev, ...validFiles].slice(0, 2));
 
-    // Create preview URLs
     validFiles.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -130,7 +120,6 @@ export const CoordinatorFeedback = () => {
       const formattedDateTime = currentDateTime.toLocaleString();
       const isoDateTime = currentDateTime.toISOString();
 
-      // Convert screenshots to base64
       const screenshotData = await Promise.all(
         screenshots.map(async (file, index) => ({
           filename: file.name,
@@ -141,20 +130,17 @@ export const CoordinatorFeedback = () => {
         }))
       );
 
-      // Power Automate HTTP trigger URL
       const powerAutomateUrl = import.meta.env.VITE_POWER_AUTOMATE_FEEDBACK_URL || "";
 
       if (!powerAutomateUrl) {
         throw new Error("Power Automate URL not configured");
       }
 
-      // Simple JSON payload for Power Automate to parse
       const payload = {
         coordinator_email: coordinatorEmail,
         subject: subject,
         feedback: feedback,
         category: categories.find((c) => c.value === category)?.label || category,
-        priority: priorities.find((p) => p.value === priority)?.label || priority,
         submitted_at: formattedDateTime,
         submitted_at_iso: isoDateTime,
         timestamp: currentDateTime.getTime(),
@@ -184,14 +170,10 @@ export const CoordinatorFeedback = () => {
       setFeedback("");
       setSubject("");
       setCategory("");
-      setPriority("medium");
       setScreenshots([]);
       setScreenshotPreviews([]);
 
-      // Hide success message after 5 seconds
-      setTimeout(() => {
-        setSubmitSuccess(false);
-      }, 5000);
+      setTimeout(() => setSubmitSuccess(false), 5000);
     } catch (err) {
       console.error("Error submitting feedback:", err);
       toast({
@@ -206,7 +188,6 @@ export const CoordinatorFeedback = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">Feedback & Support</h1>
         <p className="text-muted-foreground">
@@ -215,20 +196,13 @@ export const CoordinatorFeedback = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main Feedback Form */}
         <div className="lg:col-span-2">
           <Card className="shadow-[var(--shadow-card)]">
             <CardHeader>
-              <CardTitle >
-                Submit Feedback
-              </CardTitle>
-              {/* <CardDescription>
-                Your input helps us improve the MDII Portal. All feedback is reviewed by our team.
-              </CardDescription> */}
+              <CardTitle>Submit Feedback</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {/* Success Alert */}
                 {submitSuccess && (
                   <Alert className="border-green-200 bg-green-50">
                     <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -238,50 +212,30 @@ export const CoordinatorFeedback = () => {
                   </Alert>
                 )}
 
-                {/* Coordinator Email Display */}
                 <div className="space-y-2">
                   <Label>Submitted By</Label>
                   <Input value={coordinatorEmail} disabled className="bg-muted" />
                 </div>
 
-                {/* Category and Priority Row */}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="category">
-                      Category <span className="text-destructive">*</span>
-                    </Label>
-                    <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger id="category">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.value} value={cat.value}>
-                            {cat.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="priority">Priority Level</Label>
-                    <Select value={priority} onValueChange={setPriority}>
-                      <SelectTrigger id="priority">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {priorities.map((p) => (
-                          <SelectItem key={p.value} value={p.value}>
-                            <span className={p.color}>{p.label}</span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* Category Only — Priority Removed */}
+                <div className="space-y-2">
+                  <Label htmlFor="category">
+                    Category <span className="text-destructive">*</span>
+                  </Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger id="category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                {/* Subject */}
                 <div className="space-y-2">
                   <Label htmlFor="subject">
                     Subject <span className="text-destructive">*</span>
@@ -298,7 +252,6 @@ export const CoordinatorFeedback = () => {
                   </p>
                 </div>
 
-                {/* Feedback Text */}
                 <div className="space-y-2">
                   <Label htmlFor="feedback">
                     Detailed Feedback <span className="text-destructive">*</span>
@@ -324,11 +277,8 @@ export const CoordinatorFeedback = () => {
                   </div>
                 </div>
 
-                {/* Screenshot Upload */}
                 <div className="space-y-2">
-                  <Label htmlFor="screenshots">
-                    Screenshots (Optional)
-                  </Label>
+                  <Label htmlFor="screenshots">Screenshots (Optional)</Label>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <Input
@@ -348,7 +298,6 @@ export const CoordinatorFeedback = () => {
                       Upload up to 2 screenshots (PNG, JPG, max 5MB each)
                     </p>
                     
-                    {/* Screenshot Previews */}
                     {screenshotPreviews.length > 0 && (
                       <div className="grid grid-cols-2 gap-3">
                         {screenshotPreviews.map((preview, index) => (
@@ -377,7 +326,6 @@ export const CoordinatorFeedback = () => {
                   </div>
                 </div>
 
-                {/* Submit Button */}
                 <div className="flex items-center gap-3 pt-4">
                   <Button
                     onClick={handleSubmit}
@@ -402,7 +350,6 @@ export const CoordinatorFeedback = () => {
                       setFeedback("");
                       setSubject("");
                       setCategory("");
-                      setPriority("medium");
                       setScreenshots([]);
                       setScreenshotPreviews([]);
                       setSubmitSuccess(false);
@@ -417,9 +364,8 @@ export const CoordinatorFeedback = () => {
           </Card>
         </div>
 
-        {/* Sidebar Info Cards */}
+        {/* Sidebar stays exactly the same */}
         <div className="space-y-6">
-          {/* Guidelines Card */}
           <Card className="shadow-[var(--shadow-card)]">
             <CardHeader>
               <CardTitle className="text-lg">Feedback Guidelines</CardTitle>
@@ -449,7 +395,6 @@ export const CoordinatorFeedback = () => {
             </CardContent>
           </Card>
 
-          {/* Contact Card */}
           <Card className="shadow-[var(--shadow-card)] border-forest/20">
             <CardHeader className="bg-gradient-to-br from-forest/5 to-primary/5">
               <CardTitle className="text-lg">Need Immediate Help?</CardTitle>
@@ -471,7 +416,6 @@ export const CoordinatorFeedback = () => {
             </CardContent>
           </Card>
 
-          {/* Stats Card */}
           <Card className="shadow-[var(--shadow-card)]">
             <CardHeader>
               <CardTitle className="text-lg">Your Contribution</CardTitle>
