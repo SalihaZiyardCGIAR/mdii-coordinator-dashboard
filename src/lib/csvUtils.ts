@@ -29,7 +29,6 @@ export const parseCSV = (csvText: string): Task[] => {
         completed: values[5] === 'true',
         createdAt: values[6],
         completedAt: values[7] || undefined,
-        priority: (values[8] as any) || "medium"
       })
     }
   }
@@ -61,7 +60,7 @@ export const parseNotesCSV = (csvText: string): ToolNote[] => {
 }
 
 export const tasksToCSV = (tasks: Task[]): string => {
-  const headers = ['id', 'toolId', 'toolName', 'note', 'date', 'completed', 'createdAt', 'completedAt', 'priority']
+  const headers = ['id', 'toolId', 'toolName', 'note', 'date', 'completed', 'createdAt', 'completedAt']
   const rows = tasks.map(task => [
     task.id,
     task.toolId,
@@ -71,7 +70,6 @@ export const tasksToCSV = (tasks: Task[]): string => {
     task.completed,
     task.createdAt,
     task.completedAt || '',
-    task.priority || 'medium'
   ])
   
   return [headers.join(','), ...rows.map(row => row.join(','))].join('\n')

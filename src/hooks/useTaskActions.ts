@@ -44,7 +44,6 @@ export const useTaskActions = ({
       date: selectedDate.toISOString().split("T")[0],
       completed: false,
       createdAt: new Date().toISOString(),
-      priority: "medium",
     }
 
     const updatedTasks = [...tasks, newTask]

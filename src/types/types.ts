@@ -7,7 +7,6 @@ export interface Task {
   completed: boolean
   createdAt: string
   completedAt?: string
-  priority?: "low" | "medium" | "high"
 }
 
 export interface ToolNote {

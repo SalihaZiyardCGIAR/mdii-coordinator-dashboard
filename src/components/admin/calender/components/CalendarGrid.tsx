@@ -10,8 +10,8 @@ interface CalendarGridProps {
   setCurrentDate: (date: Date) => void
   selectedDate: Date | null
   tasks: Task[]
-  sortBy: "date" | "createdAt" | "priority"
-  setSortBy: (value: "date" | "createdAt" | "priority") => void
+  sortBy: "date" | "createdAt"
+  setSortBy: (value: "date" | "createdAt") => void
   filterBy: "all" | "active" | "completed"
   setFilterBy: (value: "all" | "active" | "completed") => void
   toolFilter: string
@@ -86,7 +86,6 @@ export const CalendarGrid = ({
             <SelectContent>
               <SelectItem value="date">Date</SelectItem>
               <SelectItem value="createdAt">Creation Date</SelectItem>
-              <SelectItem value="priority">Priority</SelectItem>
             </SelectContent>
           </Select>
           <div className="flex gap-2">
