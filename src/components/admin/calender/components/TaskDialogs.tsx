@@ -24,7 +24,7 @@ interface TaskDialogsProps {
   onAddNote: (content: string) => void
   onDeleteTask: (taskId: string) => void
   onDeleteNote: (noteId: string) => void
-  onConfirmComplete: () => void
+  onConfirmComplete: (taskId: string) => void  
 }
 
 export const TaskDialogs = ({
@@ -98,7 +98,7 @@ export const TaskDialogs = ({
         onOpenChange={(open) => !open && setConfirmCompleteTaskId(null)}
         title="Mark Task as Complete?"
         description="Are you sure you want to mark this task as completed?"
-        onConfirm={onConfirmComplete}
+        onConfirm={() => confirmCompleteTaskId && onConfirmComplete(confirmCompleteTaskId)}  
         onCancel={() => setConfirmCompleteTaskId(null)}
         confirmText="Mark Complete"
         confirmIcon={<Check className="h-4 w-4 mr-2" />}

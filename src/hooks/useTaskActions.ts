@@ -74,23 +74,22 @@ export const useTaskActions = ({
     await saveTasksToAzure(updatedTasks)
   }
 
-  const confirmTaskCompletion = async () => {
-    const taskId = tasks.find(t => t.id)?.id
-    if (!taskId) return
-    
-    const updatedTasks = tasks.map(task => 
-      task.id === taskId 
-        ? { 
-            ...task, 
-            completed: true,
-            completedAt: new Date().toISOString()
-          }
-        : task
-    )
-    setTasks(updatedTasks)
-    await saveTasksToAzure(updatedTasks)
-    setConfirmCompleteTaskId(null)
-  }
+  const confirmTaskCompletion = async (taskId: string) => {  
+  if (!taskId) return
+  
+  const updatedTasks = tasks.map(task => 
+    task.id === taskId 
+      ? { 
+          ...task, 
+          completed: true,
+          completedAt: new Date().toISOString()
+        }
+      : task
+  )
+  setTasks(updatedTasks)
+  await saveTasksToAzure(updatedTasks)
+  setConfirmCompleteTaskId(null)
+}
 
   const handleDeleteTask = async (taskId: string) => {
     const updatedTasks = tasks.filter(t => t.id !== taskId)
