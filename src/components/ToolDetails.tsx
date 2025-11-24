@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, FileText, Calendar, User, MapPin, Loader2, CheckCircle, XCircle, AlertCircle, StopCircle, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { Loader } from "@/components/Loader";
 import { useToast } from "@/hooks/use-toast";
 import DataTable from "./DataTable";
 import { fetchToolDetails, ToolDetailsData } from "@/context/toolUtils";
-import {  getToolStatus, updateToolStatusOnStop } from "@/utils/blobStorage";
+import { getToolStatus, updateToolStatusOnStop } from "@/utils/blobStorage";
 
 interface ToolDetailsProps {
   toolId?: string | null;
@@ -22,6 +22,8 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
   const { tools, coordinatorEmail, setTools } = useData();
   const { toast } = useToast();
   const [selectedTool, setSelectedTool] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toolData, setToolData] = useState<ToolDetailsData | null>(null);
@@ -29,6 +31,7 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
   const [stoppingTool, setStoppingTool] = useState(false);
   const [domainExpertsAssigned, setDomainExpertsAssigned] = useState(false);
   const [checkingAssignment, setCheckingAssignment] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (propToolId && tools.length > 0) {
@@ -36,6 +39,20 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
       fetchToolData(propToolId);
     }
   }, [propToolId, tools.length]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const fetchToolData = async (toolId: string) => {
     setLoading(true);
@@ -83,33 +100,33 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
       setCheckingAssignment(false);
 
       const data = await fetchToolDetails(toolId, tools);
-const savedStatus = await getToolStatus(toolId);
+      const savedStatus = await getToolStatus(toolId);
 
-// Check if tool is truly completed based on CSV columns
-if (savedStatus) {
-  const isActuallyCompleted = 
-    savedStatus['Status'] === 'Completed' &&
-    savedStatus['Current Step'] === 'Report Sent' &&
-    (savedStatus['Report Sent'] === 'Checkmark' || savedStatus['Report Sent'] === '✓') &&
-    savedStatus['Survey Closed Time for Downstream Beneficiries'] &&
-    savedStatus['Survey Closed Time for Direct Users'];
-    
+      // Check if tool is truly completed based on CSV columns
+      if (savedStatus) {
+        const isActuallyCompleted = 
+          savedStatus['Status'] === 'Completed' &&
+          savedStatus['Current Step'] === 'Report Sent' &&
+          (savedStatus['Report Sent'] === 'Checkmark' || savedStatus['Report Sent'] === '✓') &&
+          savedStatus['Survey Closed Time for Downstream Beneficiries'] &&
+          savedStatus['Survey Closed Time for Direct Users'];
+          
 
-  // Only mark as stopped if ALL conditions are met
-  data.status = isActuallyCompleted ? 'stopped' : 'active';
-  
-  console.log('Tool status check:', {
-    toolId,
-    csvStatus: savedStatus['Status'],
-    currentStep: savedStatus['Current Step'],
-    reportSent: savedStatus['Report Sent'],
-    surveyClosedDownstream: savedStatus['Survey Closed Time for Downstream Beneficiries'],
-    surveyClosedDirectUsers: savedStatus['Survey Closed Time for Direct Users'],
-    finalStatus: data.status
-  });
-}
+        // Only mark as stopped if ALL conditions are met
+        data.status = isActuallyCompleted ? 'stopped' : 'active';
+        
+        console.log('Tool status check:', {
+          toolId,
+          csvStatus: savedStatus['Status'],
+          currentStep: savedStatus['Current Step'],
+          reportSent: savedStatus['Report Sent'],
+          surveyClosedDownstream: savedStatus['Survey Closed Time for Downstream Beneficiries'],
+          surveyClosedDirectUsers: savedStatus['Survey Closed Time for Direct Users'],
+          finalStatus: data.status
+        });
+      }
 
-setToolData(data);
+      setToolData(data);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -122,112 +139,117 @@ setToolData(data);
     fetchToolData(selectedTool);
   };
 
+  // Filter tools based on search query
+  const filteredTools = tools.filter(tool => 
+    tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    tool.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleStopTool = () => {
     setIsStopDialogOpen(true);
   };
 
-const handleConfirmStop = async () => {
-  if (!toolData) return;
+  const handleConfirmStop = async () => {
+    if (!toolData) return;
 
-  setStoppingTool(true);
-  const currentDateTime = new Date();
-  const formattedDateTime = currentDateTime.toLocaleString('en-US', {
-    month: '2-digit',
-    day: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-  });
-  const isoDateTime = currentDateTime.toISOString();
-
-  try {
-    const calculationMethod = toolData.maturity === "advance_stage" ? "MDII Regular Version" : "MDII Exante Version";
-    const csvApiUrl = `${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/score_kobo_tool?code=${import.meta.env.VITE_AZURE_FUNCTION_KEY}&tool_id=${toolData.toolId}&calculation_method=${encodeURIComponent(calculationMethod)}&column_names=column_names`;
-
-    const img = new Image();
-    img.src = csvApiUrl;
-
-    // Wait longer for Azure Function to complete CSV generation
-    await new Promise(resolve => setTimeout(resolve, 5000));
-
-    // **Update the CSV with the new columns**
-    await updateToolStatusOnStop(toolData.toolId, formattedDateTime);
-
-
-    const apiUrl = `/api/score-tool?tool_id=${toolData.toolId}`;
-    const response = await fetch(apiUrl);
-
-    if (!response.ok) throw new Error(`Failed to trigger tool stop: ${response.statusText}`);
-
-    setTools((prev) =>
-      prev.map((tool) => (tool.id === toolData.toolId ? { ...tool, status: "stopped" } : tool))
-    );
-
-    setToolData((prev) => prev ? { ...prev, status: "stopped" } : null);
-
-    toast({
-      title: "Tool Stopped",
-      description: `${toolData.toolName} submissions stopped at ${formattedDateTime}. Email will be sent shortly.`,
+    setStoppingTool(true);
+    const currentDateTime = new Date();
+    const formattedDateTime = currentDateTime.toLocaleString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
     });
+    const isoDateTime = currentDateTime.toISOString();
 
-    setTimeout(async () => {
-      try {
-        const flowUrl = "https://default6afa0e00fa1440b78a2e22a7f8c357.d5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/080a15cb2b9b4387ac23f1a7978a8bbb/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XlWqhTpqNuxZJkvKeCoWziBX5Vhgtix8zdUq0IF8Npw";
+    try {
+      const calculationMethod = toolData.maturity === "advance_stage" ? "MDII Regular Version" : "MDII Exante Version";
+      const csvApiUrl = `${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/score_kobo_tool?code=${import.meta.env.VITE_AZURE_FUNCTION_KEY}&tool_id=${toolData.toolId}&calculation_method=${encodeURIComponent(calculationMethod)}&column_names=column_names`;
 
-        const pdfReportLink = `https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${toolData.toolId}`;
+      const img = new Image();
+      img.src = csvApiUrl;
 
-        const payload = {
-          tool_id: toolData.toolId,
-          tool_name: toolData.toolName,
-          tool_maturity: toolData.maturity || "unknown",
-          stopped_at: formattedDateTime,
-          stopped_at_iso: isoDateTime,
-          timestamp: currentDateTime.getTime(),
-          pdf_report_link: pdfReportLink,
-        };
+      // Wait longer for Azure Function to complete CSV generation
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
-        const flowResponse = await fetch(flowUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
+      // **Update the CSV with the new columns**
+      await updateToolStatusOnStop(toolData.toolId, formattedDateTime);
 
-        if (!flowResponse.ok) {
-          throw new Error(`Failed to trigger email flow: ${flowResponse.statusText}`);
+      const apiUrl = `/api/score-tool?tool_id=${toolData.toolId}`;
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) throw new Error(`Failed to trigger tool stop: ${response.statusText}`);
+
+      setTools((prev) =>
+        prev.map((tool) => (tool.id === toolData.toolId ? { ...tool, status: "stopped" } : tool))
+      );
+
+      setToolData((prev) => prev ? { ...prev, status: "stopped" } : null);
+
+      toast({
+        title: "Tool Stopped",
+        description: `${toolData.toolName} submissions stopped at ${formattedDateTime}. Email will be sent shortly.`,
+      });
+
+      setTimeout(async () => {
+        try {
+          const flowUrl = "https://default6afa0e00fa1440b78a2e22a7f8c357.d5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/080a15cb2b9b4387ac23f1a7978a8bbb/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XlWqhTpqNuxZJkvKeCoWziBX5Vhgtix8zdUq0IF8Npw";
+
+          const pdfReportLink = `https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${toolData.toolId}`;
+
+          const payload = {
+            tool_id: toolData.toolId,
+            tool_name: toolData.toolName,
+            tool_maturity: toolData.maturity || "unknown",
+            stopped_at: formattedDateTime,
+            stopped_at_iso: isoDateTime,
+            timestamp: currentDateTime.getTime(),
+            pdf_report_link: pdfReportLink,
+          };
+
+          const flowResponse = await fetch(flowUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!flowResponse.ok) {
+            throw new Error(`Failed to trigger email flow: ${flowResponse.statusText}`);
+          }
+
+          toast({
+            title: "Email Triggered",
+            description: `Email for tool ${toolData.toolId} has been sent with Score report link attached.`,
+          });
+        } catch (flowErr: any) {
+          console.error("Error triggering Power Automate:", flowErr);
+          toast({
+            title: "Error",
+            description: `Failed to trigger email: ${flowErr.message}`,
+            variant: "destructive",
+          });
         }
+      }, 6000);
 
-        toast({
-          title: "Email Triggered",
-          description: `Email for tool ${toolData.toolId} has been sent with Score report link attached.`,
-        });
-      } catch (flowErr: any) {
-        console.error("Error triggering Power Automate:", flowErr);
-        toast({
-          title: "Error",
-          description: `Failed to trigger email: ${flowErr.message}`,
-          variant: "destructive",
-        });
-      }
-    }, 6000);
-
-    setIsStopDialogOpen(false);
-  } catch (err: any) {
-    console.error("Error stopping tool:", err);
-    toast({
-      title: "Error",
-      description: err.message.includes("Failed to fetch") || err.message.includes("CORS")
-        ? "Unable to connect to the server. Please try again later or contact support."
-        : `Failed to stop tool: ${err.message}`,
-      variant: "destructive",
-    });
-  } finally {
-    setStoppingTool(false);
-  }
-};
+      setIsStopDialogOpen(false);
+    } catch (err: any) {
+      console.error("Error stopping tool:", err);
+      toast({
+        title: "Error",
+        description: err.message.includes("Failed to fetch") || err.message.includes("CORS")
+          ? "Unable to connect to the server. Please try again later or contact support."
+          : `Failed to stop tool: ${err.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setStoppingTool(false);
+    }
+  };
 
   const getStatusIcon = (submitted: boolean) => {
     return submitted ?
@@ -244,9 +266,10 @@ const handleConfirmStop = async () => {
   };
 
   const maturityMap = {
-  advance_stage: "Advanced stage",
-  early_stage: "Early stage",
-};
+    advance_stage: "Advanced stage",
+    early_stage: "Early stage",
+  };
+
   return (
     <div className="min-h-screen">
       <div className="max-w-[1550px] mx-auto">
@@ -260,18 +283,46 @@ const handleConfirmStop = async () => {
         <div className="bg-white border rounded-lg p-6 mb-6">
           <h2 className="text-lg font-medium mb-4">Select Tool</h2>
           <div className="flex gap-3">
-            <select
-              value={selectedTool}
-              onChange={(e) => setSelectedTool(e.target.value)}
-              className="flex-1 px-3 py-2 border rounded"
-            >
-              <option value="">Choose a tool...</option>
-              {tools.map(tool => (
-                <option key={tool.id} value={tool.id}>
-                  {tool.name} ({tool.id})
-                </option>
-              ))}
-            </select>
+            <div className="flex-1 relative" ref={dropdownRef}>
+              <Input
+                type="text"
+                placeholder="Search and select a tool..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowDropdown(true);
+                }}
+                onFocus={() => setShowDropdown(true)}
+                className="pr-10"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              
+              {showDropdown && searchQuery && (
+                <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {filteredTools.length > 0 ? (
+                    filteredTools.map(tool => (
+                      <div
+                        key={tool.id}
+                        onClick={() => {
+                          setSelectedTool(tool.id);
+                          setSearchQuery(tool.name);
+                          setShowDropdown(false);
+                        }}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                      >
+                        <div className="font-medium text-sm">{tool.name}</div>
+                        <div className="text-xs text-gray-500">{tool.id}</div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                      No tools found matching "{searchQuery}"
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
             <Button onClick={handleSearch} disabled={!selectedTool || loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
               Search
@@ -286,53 +337,53 @@ const handleConfirmStop = async () => {
         </div>
 
         {toolData && (
-        <>
-          <div className="bg-white border rounded-lg p-6 mb-6">
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex-1">
-                <h2 className="text-lg font-medium mb-2">{toolData.toolName}</h2>
-                <div className="flex gap-2">
-                  <span className="text-sm text-gray-600">Tool ID: {toolData.toolId}</span>
-                  <span className="text-sm text-gray-400">•</span>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                    Maturity: {maturityMap[toolData.maturity] || "N/A"}
-                  </span>
-                  <span className="text-sm text-gray-400">•</span>
-                  <Badge className={toolData.status === "active" ? "bg-success/20 text-[#2A4779] border-success/30" : ""} variant={toolData.status === "stopped" ? "secondary" : "default"}>
-                    {toolData.status === "active" ? "Active" : "Stopped"}
-                  </Badge>
+          <>
+            <div className="bg-white border rounded-lg p-6 mb-6">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1">
+                  <h2 className="text-lg font-medium mb-2">{toolData.toolName}</h2>
+                  <div className="flex gap-2">
+                    <span className="text-sm text-gray-600">Tool ID: {toolData.toolId}</span>
+                    <span className="text-sm text-gray-400">•</span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      Maturity: {maturityMap[toolData.maturity] || "N/A"}
+                    </span>
+                    <span className="text-sm text-gray-400">•</span>
+                    <Badge className={toolData.status === "active" ? "bg-success/20 text-[#2A4779] border-success/30" : ""} variant={toolData.status === "stopped" ? "secondary" : "default"}>
+                      {toolData.status === "active" ? "Active" : "Stopped"}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
-              {toolData.status === "active" ? (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleStopTool}
-                  disabled={stoppingTool}
-                  className="gap-2"
-                >
-                  {stoppingTool ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <StopCircle className="h-4 w-4" />
-                  )}
-                  Terminate Data Collection
-                </Button>
-              ) : (
-                <Button asChild variant="default" size="sm" className="gap-2">
-                  <a
-                    href={`https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${toolData.toolId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2"
+                {toolData.status === "active" ? (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleStopTool}
+                    disabled={stoppingTool}
+                    className="gap-2"
                   >
-                    <Download className="h-4 w-4" />
-                    Download Report
-                  </a>
-                </Button>
-              )}
+                    {stoppingTool ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <StopCircle className="h-4 w-4" />
+                    )}
+                    Terminate Data Collection
+                  </Button>
+                ) : (
+                  <Button asChild variant="default" size="sm" className="gap-2">
+                    <a
+                      href={`https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${toolData.toolId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Report
+                    </a>
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <div className="bg-white border rounded-lg">
