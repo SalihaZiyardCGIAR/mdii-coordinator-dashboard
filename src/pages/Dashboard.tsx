@@ -8,10 +8,10 @@ import { useData } from "@/context/DataContext";
 import { Loader } from "@/components/Loader";
 import { CoordinatorFeedback } from "@/components/CoordinatorFeedback ";
 import UserGuide from "@/components/common/userguide/UserGuide";
-import CoordinatorManagement from "@/components/admin/CoordinatorManagement"
+import CoordinatorManagement from "@/components/admin/CoordinatorManagement";
 import DomainExpertManagement from "@/components/admin/DomainExpertManagement";
 import { AdminCalendar } from "@/components/admin/calender/AdminCalendar";
-
+import { TranslationsManagement } from "@/components/common/TranslationsManagement";
 
 const DashboardContent = () => {
   const [currentView, setCurrentView] = useState("overview");
@@ -34,6 +34,8 @@ const DashboardContent = () => {
         return isAdmin ? <DomainExpertManagement /> : null;
       case "calendar":
         return isAdmin ? <AdminCalendar /> : null;
+      case "translations":
+        return isAdmin ? <TranslationsManagement /> : null;
       case "feedback":
         return <CoordinatorFeedback />;
       case "user-guide":

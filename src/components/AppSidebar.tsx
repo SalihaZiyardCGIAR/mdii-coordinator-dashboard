@@ -1,4 +1,4 @@
-import { BarChart3, Search, LogOut, MessageSquare, BookOpen, Shield, Calendar, User } from "lucide-react";
+import { BarChart3, Search, LogOut, MessageSquare, BookOpen, Shield, Calendar, User, Languages } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -58,6 +58,11 @@ const adminOnlyItems = [
     id: "calendar",
     title: "Admin Calendar",
     icon: Calendar,
+  },
+  {
+    id: "translations",
+    title: "Translations",
+    icon: Languages,
   },
 ];
 
