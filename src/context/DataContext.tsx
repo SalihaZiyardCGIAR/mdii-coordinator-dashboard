@@ -1,6 +1,16 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 import { KOBO_CONFIG } from "@/config/koboConfig";
 import { getApiUrl } from "@/config/apiConfig";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  setStats,
+  setRecentActivity,
+  setTools,
+  setAllTools,
+  setLoading,
+  setError,
+} from "@/store/toolsSlice";
+import { setAuth } from "@/store/authSlice";
 
 // Define interfaces
 interface Submission {
@@ -68,36 +78,33 @@ interface DataContextType {
 export const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [stats, setStats] = useState<Stats>({
-    totalTools: 0,
-    appointedTools: 0,
-    evaluatedTools: 0,
-    ongoingTools: 0,
-    completionRate: 0,
-  });
-  const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
-  const [tools, setTools] = useState<Tool[]>([]);
-  const [allTools, setAllTools] = useState<Tool[]>([]);
-  const [coordinatorEmail, setCoordinatorEmail] = useState<string>("");
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  
+  // Get state from Redux
+  const { stats, recentActivity, tools, allTools, loading, error } = useAppSelector(
+    (state) => state.tools
+  );
+  const { coordinatorEmail, isAdmin } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
+    // Load from localStorage on mount
     const email = localStorage.getItem("coordinatorEmail");
     const adminStatus = localStorage.getItem("isAdmin") === "true";
+    
     if (email) {
-      setCoordinatorEmail(email);
-      setIsAdmin(adminStatus);
-      setLoading(false);
-    } else {
-      setLoading(false);
+      dispatch(setAuth({ email, isAdmin: adminStatus }));
+    }
+    
+    // Auto-fetch data if we have auth but no tools
+    if (email && allTools.length === 0) {
+      fetchData();
     }
   }, []);
 
   const fetchData = async () => {
-    setLoading(true);
-    setError(null);
+    dispatch(setLoading(true));
+    dispatch(setError(null));
+    
     try {
       // Fetch main form
       const mainRes = await fetch(getApiUrl(`assets/${KOBO_CONFIG.MAIN_FORM_ID}/data.json`, "mainForm"));
@@ -118,6 +125,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         advanced4: [],
         early4: [],
       };
+      
       const formMap = {
         advanced3: { id: KOBO_CONFIG.USERTYPE3_FORMS.advance_stage, label: "advanced3" },
         early3: { id: KOBO_CONFIG.USERTYPE3_FORMS.early_stage, label: "early3" },
@@ -134,22 +142,29 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Process the fetched data
-      setData({ mainSubs, changeSubs, evalSubs, coordinatorEmail, isAdmin });
+      processAndSetData({ mainSubs, changeSubs, evalSubs, coordinatorEmail, isAdmin });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch data");
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch data";
+      dispatch(setError(errorMessage));
       console.error("Data fetch error:", err);
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
-  const processData = (
-    mainSubs: Submission[],
-    changeSubs: Submission[],
-    evalSubs: EvalSubs,
-    email: string,
-    isAdminUser: boolean = false
-  ) => {
+  const processAndSetData = ({
+    mainSubs,
+    changeSubs,
+    evalSubs,
+    coordinatorEmail: email,
+    isAdmin: adminStatus = false,
+  }: {
+    mainSubs: Submission[];
+    changeSubs: Submission[];
+    evalSubs: EvalSubs;
+    coordinatorEmail: string;
+    isAdmin?: boolean;
+  }) => {
     try {
       // Sort change submissions by submission time
       changeSubs.sort((a, b) => new Date(a._submission_time).getTime() - new Date(b._submission_time).getTime());
@@ -158,6 +173,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const currentCoord: { [key: string]: string } = {};
       const appointmentTimes: { [key: string]: Date } = {};
       const maturityLevels: { [key: string]: "advanced" | "early" | null } = {};
+      
       mainSubs.forEach((sub) => {
         const toolId = sub[KOBO_CONFIG.TOOL_ID_FIELD];
         if (sub.coordinator_email) {
@@ -166,6 +182,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           maturityLevels[toolId] = sub[KOBO_CONFIG.MATURITY_FIELD] || null;
         }
       });
+      
       changeSubs.forEach((ch) => {
         const toolId = ch.tool_id;
         const newEmail = ch.Email_of_the_Coordinator;
@@ -274,10 +291,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       });
 
-      setAllTools(allToolsArray);
+      dispatch(setAllTools(allToolsArray));
 
       // Process based on user type
-      if (isAdminUser) {
+      if (adminStatus) {
         // Admin stats
         const totalCoordinators = new Set(Object.values(currentCoord)).size;
         let stoppedCount = 0;
@@ -290,13 +307,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const overallCompletion = mainSubs.length > 0 ? Math.round((stoppedCount / mainSubs.length) * 100) : 0;
 
-        setStats({
+        dispatch(setStats({
           totalTools: mainSubs.length,
           appointedTools: totalCoordinators,
           evaluatedTools: stoppedCount,
           ongoingTools: activeCount,
           completionRate: overallCompletion,
-        });
+        }));
 
         // Admin recent activity: last 3 tool updates
         let allActivities: Activity[] = Object.keys(toolMap).map((id) => ({
@@ -306,11 +323,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           date: (lastTimes[id] || new Date()).toLocaleDateString("en-CA"),
           coordinator: currentCoord[id] || "Unassigned",
         }));
+        
         allActivities.sort((a, b) =>
           (lastTimes[b.id] || new Date()).getTime() - (lastTimes[a.id] || new Date()).getTime()
         );
-        setRecentActivity(allActivities.slice(0, 3));
-        setTools(allToolsArray);
+        
+        dispatch(setRecentActivity(allActivities.slice(0, 3)));
+        dispatch(setTools(allToolsArray));
       } else {
         // Coordinator specific stats
         const appointedToolsCount = Object.entries(currentCoord).filter(
@@ -329,13 +348,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const completionRate = appointedToolsCount > 0 ? Math.round((stoppedCount / appointedToolsCount) * 100) : 0;
 
-        setStats({
+        dispatch(setStats({
           totalTools,
           appointedTools: appointedToolsCount,
           evaluatedTools: stoppedCount,
           ongoingTools: activeCount,
           completionRate,
-        });
+        }));
 
         // Coordinator recent activity
         const appointedIds = Object.entries(currentCoord)
@@ -354,7 +373,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           (appointmentTimes[b.id] || lastTimes[b.id]).getTime() -
           (appointmentTimes[a.id] || lastTimes[a.id]).getTime()
         );
-        setRecentActivity(activities.slice(0, 3));
+        
+        dispatch(setRecentActivity(activities.slice(0, 3)));
 
         // Coordinator tools - Filter by coordinator email from currentCoord
         const appointedTools = Object.entries(currentCoord)
@@ -374,10 +394,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
           });
 
-        setTools(appointedTools);
+        dispatch(setTools(appointedTools));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to process data");
+      const errorMessage = err instanceof Error ? err.message : "Failed to process data";
+      dispatch(setError(errorMessage));
       console.error("Data processing error:", err);
     }
   };
@@ -395,11 +416,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     coordinatorEmail: string;
     isAdmin?: boolean;
   }) => {
-    setCoordinatorEmail(email);
-    setIsAdmin(adminStatus);
+    // Update auth in Redux and localStorage
+    dispatch(setAuth({ email, isAdmin: adminStatus }));
     localStorage.setItem("coordinatorEmail", email);
     localStorage.setItem("isAdmin", adminStatus.toString());
-    processData(mainSubs, changeSubs, evalSubs, email, adminStatus);
+    
+    // Process and store data
+    processAndSetData({ mainSubs, changeSubs, evalSubs, coordinatorEmail: email, isAdmin: adminStatus });
+  };
+
+  const handleSetTools = (tools: Tool[] | ((prev: Tool[]) => Tool[])) => {
+    if (typeof tools === 'function') {
+      // Handle function updater
+      const currentTools = useAppSelector((state) => state.tools.tools);
+      dispatch(setTools(tools(currentTools)));
+    } else {
+      dispatch(setTools(tools));
+    }
   };
 
   const value: DataContextType = {
@@ -410,7 +443,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     coordinatorEmail,
     isAdmin,
     setData,
-    setTools,
+    setTools: handleSetTools,
     fetchData,
     loading,
     error,
@@ -418,6 +451,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
+
 export const useData = () => {
   const context = useContext(DataContext);
   if (!context) {

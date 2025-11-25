@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useData } from "@/context/DataContext";
 import { useToast } from "@/hooks/use-toast";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { updateToolStatus } from "@/store/toolsSlice";
 
 const useToolActions = () => {
-  const { allTools, setTools } = useData();
+  const dispatch = useAppDispatch();
+  const allTools = useAppSelector((state) => state.tools.allTools);
   const { toast } = useToast();
   const [stoppingToolId, setStoppingToolId] = useState<string | null>(null);
 
@@ -35,9 +38,11 @@ const useToolActions = () => {
         throw new Error(`Failed to trigger tool stop: ${response.statusText}`);
       }
 
-      setTools((prev) =>
-        prev.map((t) => (t.id === tool.id ? { ...t, status: "stopped" } : t))
-      );
+      dispatch(updateToolStatus({ id: tool.id, status: "stopped" }));
+
+      // setTools((prev) =>
+      //   prev.map((t) => (t.id === tool.id ? { ...t, status: "stopped" } : t))
+      // );
 
       toast({
         title: "Tool Stopped",
