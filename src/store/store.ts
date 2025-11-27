@@ -3,16 +3,18 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import toolsReducer from './toolsSlice';
 import authReducer from './authSlice';
+import domainExpertReducer from './domainExpertsSlice'
 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['tools', 'auth'], // persist both tools and auth
+  whitelist: ['tools', 'auth', 'domainExperts'], // persist both tools and auth
 };
 
 const rootReducer = combineReducers({
   tools: toolsReducer,
   auth: authReducer,
+  domainExperts: domainExpertReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { KOBO_CONFIG } from "@/config/koboConfig";
 import { getApiUrl } from "@/config/apiConfig";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setDomainExperts, setLoading, setError } from "@/store/domainExpertsSlice";
 
 interface DomainExpert {
   name: string;
@@ -17,8 +19,11 @@ interface DomainExpert {
 }
 
 export default function DomainExpertManagement() {
-  const [domainExperts, setDomainExperts] = useState<DomainExpert[]>([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { experts: domainExperts, loading, error: fetchError, lastFetched } = useAppSelector(
+    (state) => state.domainExperts
+  );
+
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedExpert, setSelectedExpert] = useState<DomainExpert | null>(null);
@@ -32,8 +37,13 @@ export default function DomainExpertManagement() {
 
   const expertsPerPage = 15;
 
-  const uniqueOrganizations = Array.from(new Set(domainExperts.map(expert => expert.organization)));
-  const uniqueDomains = Array.from(new Set(domainExperts.flatMap(expert => expert.domains)));
+  // Explicitly type the arrays
+  const uniqueOrganizations: string[] = Array.from(
+    new Set(domainExperts.map((expert: DomainExpert) => expert.organization))
+  );
+  const uniqueDomains: string[] = Array.from(
+    new Set(domainExperts.flatMap((expert: DomainExpert) => expert.domains))
+  );
 
   const domainColorPalette = [
     {
@@ -49,12 +59,17 @@ export default function DomainExpertManagement() {
   };
 
   useEffect(() => {
-    fetchDomainExperts();
+    // Only fetch if we don't have data or if it's been more than 5 minutes
+    const shouldFetch = !lastFetched || Date.now() - lastFetched > 5 * 60 * 1000;
+    
+    if (shouldFetch && domainExperts.length === 0) {
+      fetchDomainExperts();
+    }
   }, []);
 
   const fetchDomainExperts = async () => {
     try {
-      setLoading(true);
+      dispatch(setLoading(true));
 
       const domainExpertSubs: any = {
         advancedDomain: [],
@@ -162,23 +177,22 @@ export default function DomainExpertManagement() {
       });
 
       const expertList = Array.from(expertMap.values());
-      setDomainExperts(expertList);
+      dispatch(setDomainExperts(expertList));
     } catch (error) {
       console.error("Error fetching domain experts:", error);
-    } finally {
-      setLoading(false);
+      dispatch(setError(error instanceof Error ? error.message : "Failed to fetch domain experts"));
     }
   };
 
-  const filteredExperts = domainExperts.filter((expert) => {
+  const filteredExperts = domainExperts.filter((expert: DomainExpert) => {
     const matchesSearch =
       expert.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       expert.organization.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      expert.domains.some((domain) => domain.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      expert.toolIds.some((toolId) => toolId.toLowerCase().includes(searchQuery.toLowerCase()));
+      expert.domains.some((domain: string) => domain.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      expert.toolIds.some((toolId: string) => toolId.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesOrganization = selectedOrganizations.size === 0 || selectedOrganizations.has(expert.organization);
-    const matchesDomain = selectedDomains.size === 0 || expert.domains.some(domain => selectedDomains.has(domain));
+    const matchesDomain = selectedDomains.size === 0 || expert.domains.some((domain: string) => selectedDomains.has(domain));
 
     return matchesSearch && matchesOrganization && matchesDomain;
   });
@@ -196,9 +210,26 @@ export default function DomainExpertManagement() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Domain Expert Management</h1>
-        <p className="text-gray-600">View domain experts and their expertise areas</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Domain Expert Management</h1>
+          <p className="text-gray-600">View domain experts and their expertise areas</p>
+        </div>
+        <Button
+          onClick={fetchDomainExperts}
+          disabled={loading}
+          variant="outline"
+          size="sm"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Syncing...
+            </>
+          ) : (
+            "Refresh Data"
+          )}
+        </Button>
       </div>
 
       {/* Compact Search and Filter Bar */}
@@ -252,7 +283,7 @@ export default function DomainExpertManagement() {
                   </Button>
                   {showOrgDropdown && (
                     <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-64 overflow-y-auto">
-                      {uniqueOrganizations.map((org) => (
+                      {uniqueOrganizations.map((org: string) => (
                         <div 
                           key={org} 
                           className="flex items-center space-x-2 p-2 hover:bg-muted cursor-pointer"
@@ -291,7 +322,7 @@ export default function DomainExpertManagement() {
                   </Button>
                   {showDomainDropdown && (
                     <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-64 overflow-y-auto">
-                      {uniqueDomains.map((domain) => (
+                      {uniqueDomains.map((domain: string) => (
                         <div 
                           key={domain} 
                           className="flex items-center space-x-2 p-2 hover:bg-muted cursor-pointer"
@@ -318,7 +349,7 @@ export default function DomainExpertManagement() {
         </CardContent>
       </Card>
 
-      {loading && (
+      {loading && domainExperts.length === 0 && (
         <Card>
           <CardContent className="text-center py-6">
             <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-600" />
@@ -348,7 +379,7 @@ export default function DomainExpertManagement() {
                         </tr>
                       </thead>
                       <tbody>
-                        {paginatedExperts.map((expert, index) => (
+                        {paginatedExperts.map((expert: DomainExpert, index: number) => (
                           <tr
                             key={`${expert.name}-${expert.organization}`}
                             className={`border-b hover:bg-[#f9f9f9] transition-colors ${
@@ -365,7 +396,7 @@ export default function DomainExpertManagement() {
                             </td>
                             <td className="py-3 px-8">
                               <div className="flex flex-wrap gap-1.5">
-                                {expert.domains.map((domain, idx) => {
+                                {expert.domains.map((domain: string, idx: number) => {
                                   const { bg, text } = getDomainBadgeStyle(domain);
                                   return (
                                     <span
@@ -455,7 +486,7 @@ export default function DomainExpertManagement() {
             </div>
             <ul className="list-disc pl-5 max-h-64 overflow-y-auto">
               {selectedExpert.toolIds.length > 0 ? (
-                selectedExpert.toolIds.map((toolId) => (
+                selectedExpert.toolIds.map((toolId: string) => (
                   <li key={toolId} className="text-sm text-foreground mb-1">
                     {toolId}
                   </li>
