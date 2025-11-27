@@ -10,6 +10,7 @@ import { KOBO_CONFIG } from "@/config/koboConfig";
 import { getApiUrl } from "@/config/apiConfig";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setDomainExperts, setLoading, setError } from "@/store/domainExpertsSlice";
+import PageHeader from "../common/subcomponents/PageHeader";
 
 interface DomainExpert {
   name: string;
@@ -211,25 +212,7 @@ export default function DomainExpertManagement() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Domain Expert Management</h1>
-          <p className="text-gray-600">View domain experts and their expertise areas</p>
-        </div>
-        <Button
-          onClick={fetchDomainExperts}
-          disabled={loading}
-          variant="outline"
-          size="sm"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Syncing...
-            </>
-          ) : (
-            "Refresh Data"
-          )}
-        </Button>
+        <PageHeader title={"Domain Expert Management"} subtitle={"View domain experts and their expertise areas"} />
       </div>
 
       {/* Compact Search and Filter Bar */}
