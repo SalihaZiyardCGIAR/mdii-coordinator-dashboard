@@ -32,6 +32,11 @@ const menuItems = [
     icon: Search,
   },
   {
+    id: "translations",
+    title: "Translations",
+    icon: Languages,
+  },
+  {
     id: "feedback",
     title: "Feedback & Support",
     icon: MessageSquare,
@@ -58,11 +63,6 @@ const adminOnlyItems = [
     id: "calendar",
     title: "Admin Calendar",
     icon: Calendar,
-  },
-  {
-    id: "translations",
-    title: "Translations",
-    icon: Languages,
   },
 ];
 

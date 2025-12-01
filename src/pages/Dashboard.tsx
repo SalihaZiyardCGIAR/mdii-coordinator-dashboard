@@ -36,7 +36,7 @@ const DashboardContent = () => {
       case "calendar":
         return isAdmin ? <AdminCalendar /> : null;
       case "translations":
-        return isAdmin ? <TranslationsManagement /> : null;
+        return  <TranslationsManagement />;
       case "feedback":
         return <CoordinatorFeedback />;
       case "user-guide":
