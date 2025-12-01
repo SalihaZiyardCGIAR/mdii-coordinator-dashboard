@@ -17,3 +17,10 @@ export interface ToolNote {
   createdAt: string
   updatedAt: string
 }
+
+export interface DomainExpert {
+  name: string;
+  organization: string;
+  domains: string[];
+  toolIds: string[];
+}
