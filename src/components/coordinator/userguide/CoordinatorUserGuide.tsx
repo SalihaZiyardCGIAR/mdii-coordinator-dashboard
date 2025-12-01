@@ -29,7 +29,7 @@ import {
   BookOpen,
 } from "lucide-react";
 
-const UserGuide = () => {
+const CoordinatorUserGuide = () => {
   const [activeSection, setActiveSection] = useState<string | null>("what-is-mdii");
   const sections = useSections();
 
@@ -58,7 +58,7 @@ const UserGuide = () => {
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground">User Guide</h1>
+                  <h1 className="text-3xl font-bold text-foreground">Coordinator User Guide</h1>
                   <p className="text-gray-600">Discover what makes MDII unique</p>
                 </div>
               </div>
@@ -214,4 +214,4 @@ const UserGuide = () => {
   );
 };
 
-export default UserGuide;
+export default CoordinatorUserGuide;
