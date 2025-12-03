@@ -65,7 +65,7 @@ mdii-coordinator-dashboard/
 
 3. **Configure environment variables**
    
-   Create a `.env` file in the root directory and add the required environment variables.
+   Create a `.env.local` file in the root directory and add the required environment variables.
 
 4. **Run the development server**
 ```bash
