@@ -10,7 +10,7 @@ import { KOBO_CONFIG } from "@/config/koboConfig";
 import { getApiUrl } from "@/config/apiConfig";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setDomainExperts, setLoading, setError } from "@/store/domainExpertsSlice";
-import PageHeader from "../common/subcomponents/PageHeader";
+import PageHeader from "../../common/subcomponents/PageHeader";
 
 interface DomainExpert {
   name: string;

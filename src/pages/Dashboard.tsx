@@ -6,13 +6,13 @@ import { AdminDashboardOverview } from "@/components/admin/dashboard/AdminDashbo
 import { ToolDetails } from "@/components/ToolDetails";
 import { useData } from "@/context/DataContext";
 import { Loader } from "@/components/Loader";
-import { CoordinatorFeedback } from "@/components/CoordinatorFeedback ";
+import { CoordinatorFeedback } from "@/components/common/feedback/CoordinatorFeedback";
 import CoordinatorUserGuide from "@/components/coordinator/userguide/CoordinatorUserGuide";
 import AdminUserGuide from "@/components/admin/userguide/AdminUserGuide";
-import CoordinatorManagement from "@/components/admin/CoordinatorManagement";
-import DomainExpertManagement from "@/components/admin/DomainExpertManagement";
+import CoordinatorManagement from "@/components/admin/coordinatorManagement/CoordinatorManagement";
+import DomainExpertManagement from "@/components/admin/domainExpertManagement/DomainExpertManagement";
 import { AdminCalendar } from "@/components/admin/calender/AdminCalendar";
-import { TranslationsManagement } from "@/components/common/TranslationsManagement";
+import { TranslationsManagement } from "@/components/common/translationManagement/TranslationsManagement";
 
 const DashboardContent = () => {
   const [currentView, setCurrentView] = useState("overview");
