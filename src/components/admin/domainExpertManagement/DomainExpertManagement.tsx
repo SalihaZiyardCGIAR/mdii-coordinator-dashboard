@@ -77,6 +77,7 @@ export default function DomainExpertManagement() {
         earlyDomain: [],
       };
 
+      // Use KOBO_CONFIG for form IDs
       try {
         const advDomainRes = await fetch(
           getApiUrl(`assets/${KOBO_CONFIG.DOMAIN_EXPERT_FORMS.advance_stage}/data.json`, "advancedDomain")
@@ -103,11 +104,14 @@ export default function DomainExpertManagement() {
 
       const expertMap = new Map<string, DomainExpert>();
 
+      // Use KOBO_CONFIG.DOMAIN_EXPERT_QUESTIONS for field names
+      const advQuestions = KOBO_CONFIG.DOMAIN_EXPERT_QUESTIONS.advance_stage;
+      
       domainExpertSubs.advancedDomain.forEach((sub: any) => {
-        const name = sub["group_intro_001/Q_22100000"] || "Unknown";
-        const organization = sub["group_intro_001/Q_22200000"] || "Unknown";
-        const domainsStr = sub["group_intro_001/Q_22300000"];
-        const toolId = sub["group_intro_001/Q_13110000"] || sub["group_intro/Q_13110000"];
+        const name = sub[advQuestions.name] || "Unknown";
+        const organization = sub[advQuestions.organization] || "Unknown";
+        const domainsStr = sub[advQuestions.domains];
+        const toolId = sub[advQuestions.toolId] || sub["group_intro/Q_13110000"];
 
         if (name && domainsStr) {
           const key = `${name}-${organization}`;
@@ -140,11 +144,14 @@ export default function DomainExpertManagement() {
         }
       });
 
+      // Use KOBO_CONFIG.DOMAIN_EXPERT_QUESTIONS for early stage field names
+      const earlyQuestions = KOBO_CONFIG.DOMAIN_EXPERT_QUESTIONS.early_stage;
+      
       domainExpertSubs.earlyDomain.forEach((sub: any) => {
-        const name = sub["group_individualinfo/Q_22100000"] || "Unknown";
-        const organization = sub["group_individualinfo/Q_22200000"] || "Unknown";
-        const domainsStr = sub["group_individualinfo/Q_22300000"];
-        const toolId = sub["group_toolid/Q_13110000"] || sub["group_intro/Q_13110000"];
+        const name = sub[earlyQuestions.name] || "Unknown";
+        const organization = sub[earlyQuestions.organization] || "Unknown";
+        const domainsStr = sub[earlyQuestions.domains];
+        const toolId = sub[earlyQuestions.toolId] || sub["group_intro/Q_13110000"];
 
         if (name && domainsStr) {
           const key = `${name}-${organization}`;

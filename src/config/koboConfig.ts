@@ -60,6 +60,22 @@ export const KOBO_CONFIG = {
     "au52CRd6ATzV7S36WcAdDu",
     "aDrD6ZuThQweedHFoogbi4",
   ] as const,
+
+  DOMAIN_EXPERT_QUESTIONS: {
+    advance_stage: {
+      name: "group_intro_001/Q_22100000",
+      organization: "group_intro_001/Q_22200000",
+      domains: "group_intro_001/Q_22300000",
+      toolId: "group_intro_001/Q_13110000",
+    },
+    early_stage: {
+      name: "group_individualinfo/Q_22100000",
+      organization: "group_individualinfo/Q_22200000",
+      domains: "group_individualinfo/Q_22300000",
+      toolId: "group_toolid/Q_13110000",
+    },
+  } as const,
+
   MONTH_NAMES: [
   "January",
   "February",
@@ -74,6 +90,7 @@ export const KOBO_CONFIG = {
   "November",
   "December",
   ] as const,
+
   DAY_NAMES_SHORT: [
   "Sun",
   "Mon",
@@ -82,14 +99,15 @@ export const KOBO_CONFIG = {
   "Thu",
   "Fri",
   "Sat",
-] as const,
-DAY_NAMES_FULL: [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-] as const,
+  ] as const,
+
+  DAY_NAMES_FULL: [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ] as const,
 } as const;
