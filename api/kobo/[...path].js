@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     const { path: pathSegments = [] } = req.query;
     const pathStr = Array.isArray(pathSegments) ? pathSegments.join('/') : pathSegments;
     const queryString = req.url.split('?')[1] || ''; // Preserve query params (e.g., ?format=json)
-    const koboUrl = `https://kf.kobotoolbox.org/api/v2/${pathStr}${queryString ? `?${queryString}` : ''}`;
+    const koboUrl = `${import.meta.env.VITE_KOBO_URL}${pathStr}${queryString ? `?${queryString}` : ''}`;
 
     console.log('Proxying to KoBo:', req.method, koboUrl);
     console.log('Headers:', Object.fromEntries(Object.entries(req.headers).filter(([k]) => !k.startsWith('x-vercel-') && k !== 'host')));
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     const fetchOptions = {
       method: req.method,
       headers: {
-        'Authorization': `Token ${process.env.VITE_KOBO_API_TOKEN || 'fc37a9329918014ef595b183adcef745a4beb217'}`,
+        'Authorization': `Token ${process.env.VITE_KOBO_API_TOKEN}`,
         'Accept': 'application/json',
         'Content-Type': req.headers['content-type'] || 'application/json',
       },
