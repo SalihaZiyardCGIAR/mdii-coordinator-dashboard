@@ -103,13 +103,13 @@ export const useCalendarData = () => {
       
       toast({
         title: "Success",
-        description: "Tasks synced to Azure Blob Storage",
+        description: "Tasks synced",
       })
     } catch (error) {
       console.error("Error saving tasks:", error)
       toast({
         title: "Error",
-        description: "Failed to sync tasks to Azure.",
+        description: "Failed to sync",
         variant: "destructive",
       })
     } finally {
@@ -137,7 +137,7 @@ export const useCalendarData = () => {
       
       toast({
         title: "Success",
-        description: "Notes synced to Azure Blob Storage",
+        description: "Notes synced",
       })
     } catch (error) {
       console.error("Error saving notes:", error)

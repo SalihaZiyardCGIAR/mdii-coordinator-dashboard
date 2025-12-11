@@ -94,7 +94,7 @@ async function readCSV(): Promise<{ data: ToolStatusRow[]; firstRow: string }> {
     console.log('Response status:', response.status);
 
     if (response.status === 404) {
-      throw new Error('CSV file not found in Azure Blob Storage');
+      throw new Error('CSV file not found');
     }
 
     if (!response.ok) {

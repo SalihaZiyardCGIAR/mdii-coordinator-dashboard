@@ -1,6 +1,8 @@
 import { Plus, Check, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Task } from "@/types/types"
+import { KOBO_CONFIG } from "@/config/koboConfig";
+
 
 interface CalendarSidebarProps {
   currentDate: Date
@@ -23,10 +25,7 @@ export const CalendarSidebar = ({
   onToggleTask,
   onSelectTool,
 }: CalendarSidebarProps) => {
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-  ]
+  const monthNames = KOBO_CONFIG.MONTH_NAMES
 
   const getTasksForDate = (date: Date) => {
     const dateStr = date.toISOString().split("T")[0]
