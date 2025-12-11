@@ -1,3 +1,4 @@
+// vite.config.ts
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -5,20 +6,20 @@ import path from "path";
 export default defineConfig({
   server: {
     host: "::",
-    port: 3001, // Changed from 8080 to 3001
+    port: 3001,
     proxy: {
-      '/api/kobo': {
-        target: 'https://kf.kobotoolbox.org/api/v2',
+      [process.env.VITE_KOBO_PROXY_PATH || "/api/kobo"]: {
+        target: process.env.VITE_KOBO_API_BASE || "https://kf.kobotoolbox.org/api/v2",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/kobo/, ''),
+        rewrite: (p) => p.replace(/^\/api\/kobo/, ""),
         configure: (proxy, _options) => {
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            proxyReq.setHeader(
-              'Authorization',
-              'Token fc37a9329918014ef595b183adcef745a4beb217'
-            );
-            proxyReq.setHeader('Accept', 'application/json');
-            console.log('Proxying:', req.method, req.url);
+          proxy.on("proxyReq", (proxyReq, req, _res) => {
+            const token = process.env.VITE_KOBO_API_TOKEN;
+            if (token) {
+              proxyReq.setHeader("Authorization", `Token ${token}`);
+            }
+            proxyReq.setHeader("Accept", "application/json");
+            console.log("Proxying KoBo request:", req.method, req.url);
           });
         },
       },
