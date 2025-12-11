@@ -62,11 +62,7 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
     setCheckingAssignment(true);
 
     try {
-      const assignmentFormIds = [
-        'ap6dUEDwX7KUsKLFZUD7kb',
-        'au52CRd6ATzV7S36WcAdDu',
-        'aDrD6ZuThQweedHFoogbi4',
-      ];
+      const assignmentFormIds = KOBO_CONFIG.DOMAIN_EXPERT_ASSIGNMENT_FORM_IDS;
 
       let isAssigned = false;
 
@@ -166,8 +162,10 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
     const isoDateTime = currentDateTime.toISOString();
 
     try {
+      // First trigger: score_kobo_tool with new URL
       const calculationMethod = toolData.maturity === "advance_stage" ? "MDII Regular Version" : "MDII Exante Version";
-      const csvApiUrl = `${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/score_kobo_tool?code=${import.meta.env.VITE_AZURE_FUNCTION_KEY}&tool_id=${toolData.toolId}&calculation_method=${encodeURIComponent(calculationMethod)}&column_names=column_names`;
+      
+      const csvApiUrl = `${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/score_kobo_tool?code=${import.meta.env.VITE_AZURE_FUNCTION_KEY}?tool_id=${toolData.toolId}&calculation_method=${encodeURIComponent(calculationMethod)}&column_names=column_ids`;
 
       const img = new Image();
       img.src = csvApiUrl;
@@ -196,10 +194,11 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
 
       setTimeout(async () => {
         try {
-          const flowUrl = "https://default6afa0e00fa1440b78a2e22a7f8c357.d5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/080a15cb2b9b4387ac23f1a7978a8bbb/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XlWqhTpqNuxZJkvKeCoWziBX5Vhgtix8zdUq0IF8Npw";
+          const flowUrl = `${import.meta.env.VITE_POWER_AUTOMATE_FLOW_URL_TERMINATE_BUTTON}`;
 
-          const pdfReportLink = `https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${toolData.toolId}`;
-
+          // const modelType = toolData.maturity === "advance_stage" ? "Re" : "Ex";
+          // const encodedToolName = encodeURIComponent(toolData.toolName);
+          const pdfReportLink = `${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/report_pdf_generation?tool_id=${toolData.toolId}&tool_name=${encodeURIComponent(toolData.toolName)}&model_type=${toolData.maturity === "advance_stage" ? "Re" : "Ex"}`
           const payload = {
             tool_id: toolData.toolId,
             tool_name: toolData.toolName,
@@ -261,7 +260,7 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
     if (!toolData) return;
 
     const toolId = toolData.toolId;
-    const formUrl = `https://ee.kobotoolbox.org/x/y8TjauDs?&d[Q_13110000]=${encodeURIComponent(toolId)}`;
+    const formUrl = `${import.meta.env.VITE_KOBO_DOMAIN_EXPERT_ASSIGNMENT_FORM_URL}?&d[Q_13110000]=${encodeURIComponent(toolId)}`;
     window.open(formUrl, '_blank');
   };
 
@@ -372,7 +371,7 @@ export function ToolDetails({ toolId: propToolId }: ToolDetailsProps) {
                 ) : (
                   <Button asChild variant="default" size="sm" className="gap-2">
                     <a
-                      href={`https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${toolData.toolId}`}
+                      href={`${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/report_pdf_generation?tool_id=${toolData.toolId}&tool_name=${encodeURIComponent(toolData.toolName)}&model_type=${toolData.maturity === "advance_stage" ? "Re" : "Ex"}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2"
