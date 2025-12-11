@@ -29,7 +29,7 @@ export const TableContent = ({
   };
 
   const handleAssignCoordinators = () => {
-    window.open("https://ee.kobotoolbox.org/x/BjUB2L85", "_blank");
+    window.open(import.meta.env.COORDINATOR_ASSIGNMENT_FORM_URL, "_blank");
   };
 
   return (
