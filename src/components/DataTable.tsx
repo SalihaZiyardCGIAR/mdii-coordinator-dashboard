@@ -6,46 +6,6 @@ import { useData } from "@/context/DataContext"
 import { KOBO_CONFIG } from "@/config/koboConfig"
 import { getApiUrl } from "@/config/apiConfig"
 
-// Form IDs for innovators and domain experts
-const INNOVATOR_FORMS = {
-  leadership: "afiUqEoYaGMS8RaygTPuAR",
-  technical: "aqxEbPgQTMQQqe42ZFW2cc",
-  projectManager: "auq274db5dfNGasdH4bWdU"
-}
-
-const DOMAIN_EXPERT_FORMS = {
-  advanced: "ap6dUEDwX7KUsKLFZUD7kb",
-  early: "au52CRd6ATzV7S36WcAdDu"
-}
-
-const DOMAIN_CODE_MAPPING = {
-  'ce': 'Country Expert',
-  'country_expert': 'Country Expert',
-  'data': 'Data',
-  'econ': 'Economics',
-  'gesi': 'Gender Equity and Social Inclusion',
-  'hcd': 'Human-Centered Design',
-  'ict': 'Information and Communication Technologies'
-}
-
-const DOMAIN_CATEGORIES = {
-  advanced: [
-    "Country Expert",
-    "Data",
-    "Economics",
-    "Gender Equity and Social Inclusion",
-    "Human-Centered Design",
-    "Information and Communication Technologies"
-  ],
-  early: [
-    "Country Expert",
-    "Data",
-    "Economics",
-    "Gender Equity and Social Inclusion",
-    "Information and Communication Technologies"
-  ]
-}
-
 // Enhanced DataTable component
 export default function DataTable({ data, questions }) {
   const [searchTerm, setSearchTerm] = useState('')
