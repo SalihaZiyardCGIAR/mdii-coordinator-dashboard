@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Task } from "@/types/types"
 import { getDaysInMonth } from "@/lib/dateUtils"
+import { KOBO_CONFIG } from "@/config/koboConfig";
 
 interface CalendarGridProps {
   currentDate: Date
@@ -33,11 +34,8 @@ export const CalendarGrid = ({
   onDateClick,
 }: CalendarGridProps) => {
   const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentDate)
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-  ]
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  const monthNames = KOBO_CONFIG.MONTH_NAMES;
+  const dayNames = KOBO_CONFIG.DAY_NAMES_SHORT;
 
   const handlePreviousMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))
   const handleNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))
