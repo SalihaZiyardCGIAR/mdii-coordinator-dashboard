@@ -74,8 +74,8 @@ export const TranslationsManagement = () => {
     setSending(true);
 
     try {
-      // Power Automate Flow URL - Replace with your actual flow URL
-      const flowUrl = "https://507d29d0878be18c9e5da5c64a8d9f.50.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c5a8add64ae9404688d26c78de499665/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=LHw6bi3qkeI5De6TbHbPO5Vpx4z21ZaaAfqUMymtTR4";
+      const flowUrl = `${import.meta.env.VITE_POWER_AUTOMATE_FLOW_URL_SEND_EMAIL_TO_TRANSLATOR}`;
+
 
       const payload = {
         translator_name: formData.translatorName,
