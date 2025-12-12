@@ -82,11 +82,6 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
     }
   };
 
-  const handleStopTool = (toolId: string) => {
-    setStoppingToolId(toolId);
-    setIsStopDialogOpen(true);
-  };
-
   const handleConfirmStop = async () => {
     if (!stoppingToolId || !tools.find(tool => tool.id === stoppingToolId)) return;
 
@@ -99,7 +94,7 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
 
     try {
       const calculationMethod = tool.maturityLevel === "advanced" ? "MDII Regular Version" : "MDII Exante Version";
-      const csvApiUrl = `${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/score_kobo_tool?code=${import.meta.env.VITE_AZURE_FUNCTION_KEY}&tool_id=${tool.id}&calculation_method=${encodeURIComponent(calculationMethod)}&column_names=column_names`;
+      const csvApiUrl = `${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/score_kobo_tool?code=${import.meta.env.VITE_AZURE_FUNCTION_KEY}&tool_id=${tool.id}&calculation_method=${encodeURIComponent(calculationMethod)}&column_names=column_ids`;
       const img = new Image();
       img.src = csvApiUrl;
 
@@ -121,9 +116,10 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
 
       setTimeout(async () => {
         try {
-          const flowUrl = "https://default6afa0e00fa1440b78a2e22a7f8c357.d5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/080a15cb2b9b4387ac23f1a7978a8bbb/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XlWqhTpqNuxZJkvKeCoWziBX5Vhgtix8zdUq0IF8Npw";
+          const flowUrl = `${import.meta.env.VITE_POWER_AUTOMATE_FLOW_URL_TERMINATE_BUTTON}`;
 
-          const pdfReportLink = `https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${tool.id}`;
+          const pdfReportLink = `${import.meta.env.VITE_AZURE_FUNCTION_BASE}/api/report_pdf_generation?tool_id=${tool.id}&tool_name=${encodeURIComponent(tool.name)}&model_type=${tool.maturityLevel === "advanced" ? "Re" : "Ex"}`;
+
 
           const payload = {
             tool_id: tool.id,
@@ -342,7 +338,7 @@ export const ToolSearch = ({ onToolSelect }: ToolSearchProps) => {
                               className="gap-2"
                             >
                               <a
-                                href={`https://mdii-score-tool-gveza9gtabfbbxh8.eastus2-01.azurewebsites.net/api/report_pdf_generation?tool_id=${tool.id}`}
+                                href={`/api/report_pdf_generation?tool_id=${tool.id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2"

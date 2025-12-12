@@ -425,15 +425,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     processAndSetData({ mainSubs, changeSubs, evalSubs, coordinatorEmail: email, isAdmin: adminStatus });
   };
 
-  const handleSetTools = (tools: Tool[] | ((prev: Tool[]) => Tool[])) => {
-    if (typeof tools === 'function') {
-      // Handle function updater
-      const currentTools = useAppSelector((state) => state.tools.tools);
-      dispatch(setTools(tools(currentTools)));
-    } else {
-      dispatch(setTools(tools));
-    }
-  };
+  const handleSetTools = (toolsOrUpdater: Tool[] | ((prev: Tool[]) => Tool[])) => {
+  if (typeof toolsOrUpdater === 'function') {
+    // Use the tools from the component scope (already in state via useAppSelector above)
+    dispatch(setTools(toolsOrUpdater(tools)));
+  } else {
+    dispatch(setTools(toolsOrUpdater));
+  }
+};
 
   const value: DataContextType = {
     stats,
