@@ -159,7 +159,7 @@ const Login = () => {
           <div>
             <CardTitle className="text-2xl font-bold text-foreground">MDII Portal</CardTitle>
             <CardDescription className="text-muted-foreground">
-              Welcome to your dedicated portal. Login to Continue.
+              Welcome to your dedicated portal. Login to Continue the process.
             </CardDescription>
           </div>
         </CardHeader>
