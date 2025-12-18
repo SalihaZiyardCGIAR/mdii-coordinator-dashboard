@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     const { path: pathSegments = [] } = req.query;
     const pathStr = Array.isArray(pathSegments) ? pathSegments.join('/') : pathSegments;
     const queryString = req.url.split('?')[1] || ''; // Preserve query params (e.g., ?format=json)
-    const koboUrl = `${import.meta.env.VITE_KOBO_URL}${pathStr}${queryString ? `?${queryString}` : ''}`;
+    const koboUrl = `https://kf.kobotoolbox.org/api/v2/${pathStr}${queryString ? `?${queryString}` : ''}`;
 
     console.log('Proxying to KoBo:', req.method, koboUrl);
     console.log('Headers:', Object.fromEntries(Object.entries(req.headers).filter(([k]) => !k.startsWith('x-vercel-') && k !== 'host')));
